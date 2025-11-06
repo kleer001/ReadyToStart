@@ -183,12 +183,36 @@ class UILoop:
             )
             return
 
+        # Check dependencies only if setting is currently disabled
+        if (
+            setting.state == SettingState.DISABLED
+            and not self.game_state.resolver.can_enable(setting.id, self.game_state)
+        ):
+            hints = self.game_state.get_dependency_hints(setting.id)
+            if hints:
+                self.message_display.add_message(
+                    f"Cannot configure '{setting.label}':", MessageType.WARNING
+                )
+                for hint in hints:
+                    self.message_display.add_message(f"  • {hint}", MessageType.WARNING)
+            else:
+                self.message_display.add_message(
+                    f"Cannot configure '{setting.label}' - dependencies not met",
+                    MessageType.WARNING,
+                )
+            return
+
         result = self.setting_editor.edit_setting(setting)
 
         if result.success:
             setting.value = result.value
             setting.visit_count += 1
             setting.last_modified = time.time()
+
+            # Transition to ENABLED state if currently DISABLED (marking as "configured")
+            if setting.state == SettingState.DISABLED:
+                setting.state = SettingState.ENABLED
+
             self.game_state.propagate_changes()
             self.message_display.add_message(
                 f"Updated {setting.label} to {result.value}", MessageType.SUCCESS
@@ -257,12 +281,36 @@ class UILoop:
             )
             return
 
+        # Check dependencies only if setting is currently disabled
+        if (
+            setting.state == SettingState.DISABLED
+            and not self.game_state.resolver.can_enable(setting.id, self.game_state)
+        ):
+            hints = self.game_state.get_dependency_hints(setting.id)
+            if hints:
+                self.message_display.add_message(
+                    f"Cannot configure '{setting.label}':", MessageType.WARNING
+                )
+                for hint in hints:
+                    self.message_display.add_message(f"  • {hint}", MessageType.WARNING)
+            else:
+                self.message_display.add_message(
+                    f"Cannot configure '{setting.label}' - dependencies not met",
+                    MessageType.WARNING,
+                )
+            return
+
         result = self.setting_editor.edit_setting(setting)
 
         if result.success:
             setting.value = result.value
             setting.visit_count += 1
             setting.last_modified = time.time()
+
+            # Transition to ENABLED state if currently DISABLED (marking as "configured")
+            if setting.state == SettingState.DISABLED:
+                setting.state = SettingState.ENABLED
+
             self.game_state.propagate_changes()
             self.message_display.add_message(
                 f"Updated {setting.label} to {result.value}", MessageType.SUCCESS
