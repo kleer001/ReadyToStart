@@ -100,3 +100,50 @@ class GameState:
         setting.visit_count += 1
         setting.last_modified = time.time()
         return True
+
+    def propagate_changes(self) -> None:
+        """Propagate state changes throughout the game.
+
+        Re-evaluates all dependencies and updates menu completion states
+        after a setting has been changed. This ensures the entire game
+        state remains consistent.
+        """
+        # Re-evaluate all dependencies
+        dependency_results = self.resolver.resolve_all(self)
+
+        # Update menu completion states
+        for menu in self.menus.values():
+            menu.completion_state = menu.calculate_completion()
+
+    def get_dependency_hints(self, setting_id: str) -> list[str]:
+        """Get human-readable hints about why a setting can't be enabled.
+
+        Args:
+            setting_id: ID of setting to check
+
+        Returns:
+            List of human-readable dependency descriptions
+        """
+        hints = []
+        deps = self.resolver.dependencies.get(setting_id, [])
+
+        for dep in deps:
+            if not dep.evaluate(self):
+                # Import here to avoid circular imports
+                from ready_to_start.core.dependencies import SimpleDependency, ValueDependency
+
+                if isinstance(dep, SimpleDependency):
+                    req_setting = self.get_setting(dep.setting_id)
+                    if req_setting:
+                        hints.append(
+                            f"Requires '{req_setting.label}' to be {dep.required_state.value}"
+                        )
+                elif isinstance(dep, ValueDependency):
+                    setting_a = self.get_setting(dep.setting_a)
+                    setting_b = self.get_setting(dep.setting_b)
+                    if setting_a and setting_b:
+                        hints.append(
+                            f"Requires '{setting_a.label}' {dep.operator} '{setting_b.label}'"
+                        )
+
+        return hints
