@@ -4,6 +4,10 @@ from dataclasses import dataclass, field
 from ready_to_start.core.config_loader import GenerationConfig
 
 
+class ContradictionError(Exception):
+    pass
+
+
 @dataclass
 class WFCCell:
     position: tuple[int, int]
@@ -70,6 +74,7 @@ class WFCGenerator:
         self.rules = rules
         self.config = config
         self.grid = WFCGrid(width=5, height=5)
+        self.max_retries = 3
 
     def initialize(self, all_categories: set[str]) -> None:
         for cell in self.grid.cells.values():
@@ -104,6 +109,19 @@ class WFCGenerator:
                     queue.append(neighbor)
 
     def generate(self) -> WFCGrid:
+        for attempt in range(self.max_retries):
+            self.grid = WFCGrid(width=5, height=5)
+
+            try:
+                return self._generate_once()
+            except ContradictionError:
+                if attempt == self.max_retries - 1:
+                    return self.grid
+                continue
+
+        return self.grid
+
+    def _generate_once(self) -> WFCGrid:
         all_categories = set(self.rules.keys())
         self.initialize(all_categories)
 
@@ -116,11 +134,11 @@ class WFCGenerator:
         iterations = 0
 
         while not self.grid.is_complete() and iterations < max_iterations:
+            if self.grid.has_contradiction():
+                raise ContradictionError("WFC reached contradiction")
+
             cell = self.grid.get_lowest_entropy_cell()
             if not cell:
-                break
-
-            if self.grid.has_contradiction():
                 break
 
             cell.collapse()

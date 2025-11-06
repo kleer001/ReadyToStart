@@ -16,6 +16,10 @@ class TopologyConverter:
         return self.graph
 
     def validate_graph(self) -> bool:
+        if not self.graph.nodes():
+            return False
+        if len(self.graph.nodes()) < 3:
+            return False
         if not nx.is_weakly_connected(self.graph):
             return False
         return self._has_valid_critical_path()

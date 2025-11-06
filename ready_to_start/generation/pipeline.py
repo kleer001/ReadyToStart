@@ -24,6 +24,18 @@ class GenerationPipeline:
         if seed is not None:
             random.seed(seed)
 
+        max_attempts = 5
+        for attempt in range(max_attempts):
+            try:
+                return self._generate_once()
+            except ValueError:
+                if attempt == max_attempts - 1:
+                    raise
+                continue
+
+        raise ValueError("Failed to generate valid game after max attempts")
+
+    def _generate_once(self) -> GameState:
         wfc = WFCGenerator(self.wfc_rules, self.config)
         grid = wfc.generate()
 
@@ -54,7 +66,7 @@ class GenerationPipeline:
 
             game_state.add_menu(menu)
 
-        dep_gen = DependencyGenerator(graph, self.config)
+        dep_gen = DependencyGenerator(graph, self.config, game_state.menus)
         dependencies = dep_gen.generate_dependencies()
 
         for setting_id, deps in dependencies.items():
