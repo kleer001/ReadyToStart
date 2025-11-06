@@ -6,7 +6,10 @@ requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 
-dependencies = []
+dependencies = [
+    "networkx>=3.1",
+    "matplotlib>=3.7.0",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -20,6 +23,10 @@ dev = [
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ready_to_start*"]
+exclude = ["tests*", "config*", "scripts*"]
 
 [tool.black]
 line-length = 88
