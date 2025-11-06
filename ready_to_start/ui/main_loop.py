@@ -3,6 +3,7 @@ import time
 from ready_to_start.core.enums import SettingState
 from ready_to_start.core.game_state import GameState
 from ready_to_start.ui.input_handler import InputHandler
+from ready_to_start.ui.keyboard import Key, KeyboardReader
 from ready_to_start.ui.menu_display import MenuDisplay
 from ready_to_start.ui.messages import MessageDisplay, MessageType
 from ready_to_start.ui.navigation import NavigationController
@@ -19,12 +20,15 @@ class UILoop:
 
         self.renderer = TextRenderer()
         self.input_handler = InputHandler()
+        self.keyboard = KeyboardReader()
         self.navigation = NavigationController(game_state)
         self.message_display = MessageDisplay(f"{config_dir}/messages.ini")
         self.setting_editor = SettingEditor()
 
         self.progress_bars = []
         self.last_frame_time = time.time()
+        self.selected_index = 0
+        self.navigation_mode = True
 
     def start(self, start_menu_id: str):
         success, error = self.navigation.navigate_to(start_menu_id)
@@ -77,7 +81,9 @@ class UILoop:
                 indicator,
                 f"{self.config_dir}/ui.ini",
             )
-            print(menu_display.render())
+
+            selected = self.selected_index if self.navigation_mode else -1
+            print(menu_display.render(selected))
 
         messages = self.message_display.get_current_messages()
         if messages:
@@ -92,10 +98,110 @@ class UILoop:
                     print(line)
 
         print()
+        if self.navigation_mode:
+            print("Nav: ↑↓/ws/jk=move ←→/ad=menu Enter=select :=cmd h=help q=quit")
+        else:
+            print("Command mode (ESC to return to navigation) > ", end="")
 
     def _process_input(self):
+        if self.navigation_mode:
+            self._process_navigation_input()
+        else:
+            self._process_command_input()
+
+    def _process_navigation_input(self):
+        key = self.keyboard.read_key()
+        if not key:
+            return
+
+        if key == Key.UP:
+            self._move_selection(-1)
+        elif key == Key.DOWN:
+            self._move_selection(1)
+        elif key == Key.LEFT:
+            self._handle_back()
+            self.selected_index = 0
+        elif key == Key.RIGHT:
+            self._navigate_to_first_connection()
+        elif key == Key.ENTER:
+            self._select_current()
+        elif key == ":":
+            self.navigation_mode = False
+        elif key.lower() == "q":
+            self._handle_quit()
+        elif key.lower() == "h":
+            self._handle_help()
+
+    def _navigate_to_first_connection(self):
+        if not self.navigation.current_menu or not self.navigation.current_menu.connections:
+            return
+
+        first_connection = self.navigation.current_menu.connections[0]
+        success, error = self.navigation.navigate_to(first_connection)
+
+        if success:
+            self.selected_index = 0
+            self.message_display.add_message(
+                f"Navigated to {self.navigation.current_menu.category}", MessageType.SUCCESS
+            )
+        else:
+            self.message_display.add_message(error, MessageType.ERROR)
+
+    def _move_selection(self, direction: int):
+        if not self.navigation.current_menu:
+            return
+
+        visible_settings = [
+            s
+            for s in self.navigation.current_menu.settings
+            if s.state != SettingState.HIDDEN
+        ]
+
+        if not visible_settings:
+            return
+
+        self.selected_index = (self.selected_index + direction) % len(visible_settings)
+
+    def _select_current(self):
+        if not self.navigation.current_menu:
+            return
+
+        visible_settings = [
+            s
+            for s in self.navigation.current_menu.settings
+            if s.state != SettingState.HIDDEN
+        ]
+
+        if not visible_settings or self.selected_index >= len(visible_settings):
+            return
+
+        setting = visible_settings[self.selected_index]
+
+        if setting.state == SettingState.LOCKED:
+            self.message_display.add_message(
+                f"Setting '{setting.label}' is locked", MessageType.WARNING
+            )
+            return
+
+        result = self.setting_editor.edit_setting(setting)
+
+        if result.success:
+            setting.value = result.value
+            setting.visit_count += 1
+            setting.last_modified = time.time()
+            self.game_state.propagate_changes()
+            self.message_display.add_message(
+                f"Updated {setting.label} to {result.value}", MessageType.SUCCESS
+            )
+        else:
+            self.message_display.add_message(result.error, MessageType.ERROR)
+
+    def _process_command_input(self):
         command = self.input_handler.read_command()
         if not command:
+            key = self.keyboard.read_key()
+            if key == Key.ESC:
+                self.navigation_mode = True
             return
 
         self.navigation.add_command_to_history(f"{command.action} {' '.join(command.args)}")
@@ -116,6 +222,8 @@ class UILoop:
             self._handle_quit()
         elif command.action == "history":
             self._handle_history()
+
+        self.navigation_mode = True
 
     def _handle_list(self):
         pass
@@ -188,15 +296,25 @@ class UILoop:
 
     def _handle_help(self):
         help_text = """
-Available commands:
+Navigation Mode:
+  ↑/w/k            - Move selection up
+  ↓/s/j            - Move selection down
+  ←/a              - Go back to previous menu
+  →/d              - Navigate to first connected menu
+  Enter            - Select/edit current setting
+  :                - Enter command mode
+  h                - Show this help
+  q                - Quit game
+
+Command Mode:
   list / ls        - Show current menu
   edit <n>         - Edit setting number n
   goto <menu>      - Navigate to menu
   back / b         - Return to previous menu
-  help / h / ?     - Show this help
   status / s       - Show progress
   history          - Show command history
   quit / q         - Exit game
+  ESC              - Return to navigation mode
 """
         print(help_text)
         input("Press Enter to continue...")

@@ -20,7 +20,7 @@ class MenuDisplay(Component):
         self.config = ConfigParser()
         self.config.read(ui_config_path)
 
-    def render(self) -> str:
+    def render(self, selected_index: int = -1) -> str:
         width = int(self.config.get("display", "width", fallback="80"))
         padding = int(self.config.get("display", "padding", fallback="2"))
         border_style = self.config.get("display", "border_style", fallback="double")
@@ -36,12 +36,19 @@ class MenuDisplay(Component):
         if not visible_settings:
             content_lines.append(" No settings available ".center(width - 2))
         else:
-            for idx, setting in enumerate(visible_settings, 1):
+            for idx, setting in enumerate(visible_settings):
                 indicator = self.indicator.get_indicator(setting.state)
                 state_label = f"({setting.state.value})"
-                line = f" {idx}. {indicator} {setting.label} {state_label}"
+                cursor = ">" if idx == selected_index else " "
+                line = f"{cursor}{idx + 1}. {indicator} {setting.label} {state_label}"
                 line = line[:width - 4]
-                content_lines.append(line.ljust(width - 2))
+
+                if idx == selected_index:
+                    line = self.renderer.colorize(line.ljust(width - 2), "cyan", bold=True)
+                else:
+                    line = line.ljust(width - 2)
+
+                content_lines.append(line)
 
         if self.menu.connections:
             content_lines.append("---")
