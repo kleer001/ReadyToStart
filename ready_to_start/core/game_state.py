@@ -108,8 +108,17 @@ class GameState:
         after a setting has been changed. This ensures the entire game
         state remains consistent.
         """
+        # Import here to avoid circular imports
+        from ready_to_start.core.enums import SettingState
+
         # Re-evaluate all dependencies
         dependency_results = self.resolver.resolve_all(self)
+
+        # Unlock LOCKED settings whose dependencies are now satisfied
+        for setting_id, can_enable in dependency_results.items():
+            setting = self.get_setting(setting_id)
+            if setting and setting.state == SettingState.LOCKED and can_enable:
+                setting.state = SettingState.DISABLED
 
         # Update menu completion states
         for menu in self.menus.values():
