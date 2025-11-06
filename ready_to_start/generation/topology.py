@@ -1,5 +1,3 @@
-from typing import List, Optional, Set, Tuple
-
 import networkx as nx
 
 from ready_to_start.core.config_loader import GenerationConfig
@@ -10,7 +8,7 @@ class TopologyConverter:
     def __init__(self, config: GenerationConfig):
         self.config = config
         self.graph = nx.DiGraph()
-        self.critical_path: List[str] = []
+        self.critical_path: list[str] = []
 
     def grid_to_graph(self, grid: WFCGrid) -> nx.DiGraph:
         self._add_nodes(grid)
@@ -44,7 +42,7 @@ class TopologyConverter:
                 to_remove = set(self.graph.nodes()) - largest
                 self.graph.remove_nodes_from(to_remove)
 
-    def get_critical_path(self) -> List[str]:
+    def get_critical_path(self) -> list[str]:
         if not self.critical_path:
             self.critical_path = self._find_critical_path()
         return self.critical_path
@@ -69,14 +67,14 @@ class TopologyConverter:
                     )
                     self.graph.add_edge(node_id, neighbor_id)
 
-    def _create_node_id(self, state: Optional[str], pos: Tuple[int, int]) -> str:
+    def _create_node_id(self, state: str | None, pos: tuple[int, int]) -> str:
         return f"{state}_{pos[0]}_{pos[1]}"
 
     def _has_valid_critical_path(self) -> bool:
         path = self._find_critical_path()
         return len(path) >= self.config.min_path_length
 
-    def _find_critical_path(self) -> List[str]:
+    def _find_critical_path(self) -> list[str]:
         start_nodes = self._get_start_nodes()
         end_nodes = self._get_end_nodes()
 
@@ -96,13 +94,13 @@ class TopologyConverter:
 
         return longest_path
 
-    def _get_start_nodes(self) -> List[str]:
+    def _get_start_nodes(self) -> list[str]:
         return [n for n in self.graph.nodes() if self.graph.in_degree(n) == 0]
 
-    def _get_end_nodes(self) -> List[str]:
+    def _get_end_nodes(self) -> list[str]:
         return [n for n in self.graph.nodes() if self.graph.out_degree(n) == 0]
 
-    def _get_reachable_nodes(self, end_nodes: List[str]) -> Set[str]:
+    def _get_reachable_nodes(self, end_nodes: list[str]) -> set[str]:
         reachable = set()
         for end in end_nodes:
             ancestors = nx.ancestors(self.graph, end)
@@ -110,7 +108,7 @@ class TopologyConverter:
             reachable.add(end)
         return reachable
 
-    def _get_reachable_from_starts(self, start_nodes: List[str]) -> Set[str]:
+    def _get_reachable_from_starts(self, start_nodes: list[str]) -> set[str]:
         reachable = set()
         for start in start_nodes:
             descendants = nx.descendants(self.graph, start)
@@ -118,7 +116,7 @@ class TopologyConverter:
             reachable.add(start)
         return reachable
 
-    def _get_reachable_from_single_start(self, start: str) -> Set[str]:
+    def _get_reachable_from_single_start(self, start: str) -> set[str]:
         descendants = nx.descendants(self.graph, start)
         descendants.add(start)
         return descendants

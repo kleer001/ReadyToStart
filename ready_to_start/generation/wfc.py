@@ -1,16 +1,15 @@
 import random
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
 
 from ready_to_start.core.config_loader import GenerationConfig
 
 
 @dataclass
 class WFCCell:
-    position: Tuple[int, int]
-    possible_states: Set[str]
+    position: tuple[int, int]
+    possible_states: set[str]
     collapsed: bool = False
-    state: Optional[str] = None
+    state: str | None = None
     entropy: float = float("inf")
 
     def collapse(self) -> str:
@@ -20,7 +19,7 @@ class WFCCell:
         self.entropy = 0
         return self.state
 
-    def constrain(self, allowed: Set[str]) -> None:
+    def constrain(self, allowed: set[str]) -> None:
         self.possible_states &= allowed
         self.entropy = len(self.possible_states)
 
@@ -29,16 +28,14 @@ class WFCCell:
 class WFCGrid:
     width: int
     height: int
-    cells: Dict[Tuple[int, int], WFCCell] = field(default_factory=dict)
+    cells: dict[tuple[int, int], WFCCell] = field(default_factory=dict)
 
     def __post_init__(self):
         for x in range(self.width):
             for y in range(self.height):
-                self.cells[(x, y)] = WFCCell(
-                    position=(x, y), possible_states=set()
-                )
+                self.cells[(x, y)] = WFCCell(position=(x, y), possible_states=set())
 
-    def get_neighbors(self, pos: Tuple[int, int]) -> List[WFCCell]:
+    def get_neighbors(self, pos: tuple[int, int]) -> list[WFCCell]:
         x, y = pos
         neighbors = []
         for dx, dy in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
@@ -47,7 +44,7 @@ class WFCGrid:
                 neighbors.append(self.cells[(nx, ny)])
         return neighbors
 
-    def get_lowest_entropy_cell(self) -> Optional[WFCCell]:
+    def get_lowest_entropy_cell(self) -> WFCCell | None:
         uncollapsed = [
             cell
             for cell in self.cells.values()
@@ -67,12 +64,14 @@ class WFCGrid:
 
 
 class WFCGenerator:
-    def __init__(self, rules: Dict[str, Dict[str, List[str]]], config: GenerationConfig):
+    def __init__(
+        self, rules: dict[str, dict[str, list[str]]], config: GenerationConfig
+    ):
         self.rules = rules
         self.config = config
         self.grid = WFCGrid(width=5, height=5)
 
-    def initialize(self, all_categories: Set[str]) -> None:
+    def initialize(self, all_categories: set[str]) -> None:
         for cell in self.grid.cells.values():
             cell.possible_states = all_categories.copy()
             cell.entropy = len(all_categories)
@@ -90,7 +89,9 @@ class WFCGenerator:
             if not current.collapsed:
                 continue
 
-            valid_neighbors = set(self.rules.get(current.state, {}).get("connections", []))
+            valid_neighbors = set(
+                self.rules.get(current.state, {}).get("connections", [])
+            )
 
             for neighbor in self.grid.get_neighbors(current.position):
                 if neighbor.collapsed:

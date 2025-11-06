@@ -1,5 +1,5 @@
 import random
-from typing import Any, Dict, List
+from typing import Any
 
 from ready_to_start.core.config_loader import GenerationConfig
 from ready_to_start.core.enums import SettingState, SettingType
@@ -13,7 +13,9 @@ class SettingCompiler:
         self.madlibs = madlibs
         self.categories_config = self._load_category_config()
 
-    def compile_settings(self, node_id: str, category: str, is_critical: bool) -> List[Setting]:
+    def compile_settings(
+        self, node_id: str, category: str, is_critical: bool
+    ) -> list[Setting]:
         cat_config = self.categories_config.get(category, {})
         count = cat_config.get("setting_count", 8)
 
@@ -22,7 +24,9 @@ class SettingCompiler:
             for i in range(count)
         ]
 
-    def _create_setting(self, node_id: str, category: str, index: int, is_critical: bool) -> Setting:
+    def _create_setting(
+        self, node_id: str, category: str, index: int, is_critical: bool
+    ) -> Setting:
         setting_type = self._choose_type(is_critical)
         label = self.madlibs.generate_setting_label(category, index)
 
@@ -40,7 +44,7 @@ class SettingCompiler:
 
         return setting
 
-    def _load_category_config(self) -> Dict[str, Dict]:
+    def _load_category_config(self) -> dict[str, dict]:
         return self.madlibs.config_loader.load_categories()
 
     def _choose_type(self, is_critical: bool) -> SettingType:

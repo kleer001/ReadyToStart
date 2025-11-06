@@ -1,7 +1,6 @@
 import configparser
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
 
 
 @dataclass
@@ -33,23 +32,21 @@ class ConfigLoader:
             noise_ratio=section.getfloat("noise_ratio"),
         )
 
-    def load_wfc_rules(self) -> Dict[str, Dict[str, List[str]]]:
+    def load_wfc_rules(self) -> dict[str, dict[str, list[str]]]:
         self._load_file("wfc_rules.ini")
         rules = {}
         for section in self.parser.sections():
             rules[section] = {
                 "connections": self._parse_list(self.parser[section]["connections"]),
-                "requires": self._parse_list(
-                    self.parser[section].get("requires", "")
-                ),
+                "requires": self._parse_list(self.parser[section].get("requires", "")),
             }
         return rules
 
-    def load_templates(self) -> Dict[str, List[str]]:
+    def load_templates(self) -> dict[str, list[str]]:
         self._load_file("templates.ini")
         return self._parse_sections()
 
-    def load_categories(self) -> Dict[str, Dict]:
+    def load_categories(self) -> dict[str, dict]:
         self._load_file("categories.ini")
         config = {}
         for section in self.parser.sections():
@@ -62,7 +59,7 @@ class ConfigLoader:
             }
         return config
 
-    def load_vocabulary(self) -> Dict[str, List[str]]:
+    def load_vocabulary(self) -> dict[str, list[str]]:
         self._load_file("vocabulary.ini")
         return self._parse_sections()
 
@@ -73,10 +70,10 @@ class ConfigLoader:
         self.parser = configparser.ConfigParser()
         self.parser.read(filepath)
 
-    def _parse_list(self, value: str) -> List[str]:
+    def _parse_list(self, value: str) -> list[str]:
         return [item.strip() for item in value.split(",") if item.strip()]
 
-    def _parse_sections(self) -> Dict[str, List[str]]:
+    def _parse_sections(self) -> dict[str, list[str]]:
         return {
             section: [self.parser[section][key] for key in self.parser[section]]
             for section in self.parser.sections()
