@@ -9,6 +9,7 @@ that don't actually do anything. Enjoy.
 import sys
 from pathlib import Path
 
+from ready_to_start.core.dependencies import SimpleDependency
 from ready_to_start.core.enums import SettingState, SettingType
 from ready_to_start.core.game_state import GameState
 from ready_to_start.core.menu import MenuNode
@@ -170,6 +171,25 @@ def create_demo_game() -> GameState:
     game_state.add_menu(graphics_menu)
     game_state.add_menu(gameplay_menu)
     game_state.add_menu(controls_menu)
+
+    # Add dependencies for locked settings
+    # Speaker Configuration requires audio to be enabled first
+    game_state.resolver.add_dependency(
+        "audio_speaker_config",
+        SimpleDependency("audio_enable", SettingState.ENABLED)
+    )
+
+    # Anti-aliasing requires V-Sync to be enabled first
+    game_state.resolver.add_dependency(
+        "graphics_antialiasing",
+        SimpleDependency("graphics_vsync", SettingState.ENABLED)
+    )
+
+    # Controller vibration requires Y-axis inversion to be configured
+    game_state.resolver.add_dependency(
+        "controls_vibration",
+        SimpleDependency("controls_invert_y", SettingState.ENABLED)
+    )
 
     return game_state
 
