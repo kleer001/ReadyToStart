@@ -20,10 +20,7 @@ class GenerationPipeline:
         self.madlibs = MadLibsEngine(self.templates, self.loader)
         self.compiler = SettingCompiler(self.config, self.madlibs)
 
-    def generate(self, seed: int | None = None) -> GameState:
-        if seed is not None:
-            random.seed(seed)
-
+    def _generate_once(self) -> GameState:
         wfc = WFCGenerator(self.wfc_rules, self.config)
         grid = wfc.generate()
 
@@ -54,7 +51,7 @@ class GenerationPipeline:
 
             game_state.add_menu(menu)
 
-        dep_gen = DependencyGenerator(graph, self.config)
+        dep_gen = DependencyGenerator(graph, self.config, game_state.menus)
         dependencies = dep_gen.generate_dependencies()
 
         for setting_id, deps in dependencies.items():
@@ -67,3 +64,16 @@ class GenerationPipeline:
         )
 
         return game_state
+
+    def generate(self, seed: int | None = None) -> GameState:
+        if seed is not None:
+            random.seed(seed)
+
+        max_attempts = 5
+        for attempt in range(max_attempts):
+            try:
+                return self._generate_once()
+            except ValueError:
+                if attempt == max_attempts - 1:
+                    raise
+                continue

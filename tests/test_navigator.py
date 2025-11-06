@@ -1,6 +1,5 @@
 """Tests for navigator module."""
 
-
 from ready_to_start.core.enums import SettingState
 from ready_to_start.core.navigator import MenuNavigator
 
