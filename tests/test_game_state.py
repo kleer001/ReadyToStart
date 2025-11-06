@@ -1,6 +1,5 @@
 """Tests for game state module."""
 
-
 from ready_to_start.core.enums import SettingState, SettingType
 from ready_to_start.core.game_state import GameState
 from ready_to_start.core.menu import MenuNode

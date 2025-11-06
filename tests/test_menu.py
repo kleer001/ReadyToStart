@@ -1,6 +1,5 @@
 """Tests for menu module."""
 
-
 from ready_to_start.core.enums import CompletionState, SettingState, SettingType
 from ready_to_start.core.menu import MenuNode
 from ready_to_start.core.types import Setting

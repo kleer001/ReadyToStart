@@ -28,7 +28,9 @@ class TestGenerationPipeline:
 
     def test_menus_have_connections(self, pipeline):
         state = pipeline.generate(seed=42)
-        menu_with_connections = any(len(m.connections) > 0 for m in state.menus.values())
+        menu_with_connections = any(
+            len(m.connections) > 0 for m in state.menus.values()
+        )
         assert menu_with_connections
 
     def test_current_menu_set(self, pipeline):

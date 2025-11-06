@@ -96,11 +96,38 @@ class DependencyGenerator:
             setting_a = random.choice(all_settings)
             setting_b = random.choice(all_settings)
             if setting_a.id != setting_b.id:
-                if setting_b.id not in deps:
-                    deps[setting_b.id] = []
-                deps[setting_b.id].append(
-                    SimpleDependency(setting_a.id, SettingState.ENABLED)
-                )
+                # Check if adding this dependency would create a cycle
+                if not self._would_create_cycle(deps, setting_a.id, setting_b.id):
+                    if setting_b.id not in deps:
+                        deps[setting_b.id] = []
+                    deps[setting_b.id].append(
+                        SimpleDependency(setting_a.id, SettingState.ENABLED)
+                    )
+
+    def _would_create_cycle(
+        self, deps: dict[str, list[Dependency]], source_id: str, target_id: str
+    ) -> bool:
+        """
+        Check if adding a dependency from source to target would create a cycle.
+        Adding source->target means target depends on source.
+        This creates a cycle if there's already a path from target to source.
+        """
+        # Build a directed graph of current dependencies
+        dep_graph = nx.DiGraph()
+
+        for dependent_id, dep_list in deps.items():
+            for dep in dep_list:
+                # dep_list contains dependencies that dependent_id depends on
+                # So we add an edge from dependency to dependent
+                dep_graph.add_edge(dep.setting_id, dependent_id)
+
+        # Adding source->target means target depends on source
+        # This would create edge: source -> target
+        # A cycle exists if there's already a path: target -> source
+        if dep_graph.has_node(target_id) and dep_graph.has_node(source_id):
+            return nx.has_path(dep_graph, target_id, source_id)
+
+        return False
 
     def _get_start_nodes(self) -> list[str]:
         return [n for n in self.graph.nodes() if self.graph.in_degree(n) == 0]

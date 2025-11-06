@@ -55,7 +55,9 @@ class TestDependencyGenerator:
         assert path[0] == "A"
         assert path[-1] == "C"
 
-    def test_generate_dependencies_creates_map(self, config, simple_graph, simple_menus):
+    def test_generate_dependencies_creates_map(
+        self, config, simple_graph, simple_menus
+    ):
         gen = DependencyGenerator(simple_graph, config, simple_menus)
         deps = gen.generate_dependencies()
         assert isinstance(deps, dict)
@@ -156,3 +158,63 @@ class TestDependencyGenerator:
         for key in deps1:
             if key in deps2:
                 assert len(deps1[key]) == len(deps2[key])
+
+    def test_cycle_detection_prevents_circular_dependencies(self, config):
+        """Test that cycle detection prevents A->B->A dependencies"""
+        graph = nx.DiGraph()
+        menus = {}
+
+        # Create a simple graph with 2 nodes
+        for node_id in ["A", "B"]:
+            graph.add_node(node_id)
+            menu = MenuNode(id=node_id, category="Test", connections=[])
+            for i in range(2):
+                setting = Setting(
+                    id=f"{node_id}_setting_{i}",
+                    type=SettingType.BOOLEAN,
+                    value=False,
+                    state=SettingState.ENABLED,
+                    label=f"{node_id} Setting {i}",
+                )
+                menu.add_setting(setting)
+            menus[node_id] = menu
+
+        gen = DependencyGenerator(graph, config, menus)
+
+        # Create a dependency: B depends on A (A -> B)
+        deps = {"B_setting_0": [SimpleDependency("A_setting_0", SettingState.ENABLED)]}
+
+        # Try to add reverse dependency: A depends on B (B -> A)
+        # This should create a cycle: A -> B -> A
+        would_cycle = gen._would_create_cycle(deps, "B_setting_0", "A_setting_0")
+
+        assert would_cycle is True
+
+    def test_cycle_detection_allows_non_circular_dependencies(self, config):
+        """Test that cycle detection allows valid dependencies"""
+        graph = nx.DiGraph()
+        menus = {}
+
+        for node_id in ["A", "B", "C"]:
+            graph.add_node(node_id)
+            menu = MenuNode(id=node_id, category="Test", connections=[])
+            for i in range(2):
+                setting = Setting(
+                    id=f"{node_id}_setting_{i}",
+                    type=SettingType.BOOLEAN,
+                    value=False,
+                    state=SettingState.ENABLED,
+                    label=f"{node_id} Setting {i}",
+                )
+                menu.add_setting(setting)
+            menus[node_id] = menu
+
+        gen = DependencyGenerator(graph, config, menus)
+
+        # Create a dependency chain: A -> B
+        deps = {"B_setting_0": [SimpleDependency("A_setting_0", SettingState.ENABLED)]}
+
+        # Adding B -> C should be fine (creates A -> B -> C)
+        would_cycle = gen._would_create_cycle(deps, "B_setting_0", "C_setting_0")
+
+        assert would_cycle is False
