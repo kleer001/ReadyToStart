@@ -76,35 +76,6 @@ class TestDependencyGenerator:
                 assert "_setting_" in dep.setting_id
                 assert dep.required_state == SettingState.ENABLED
 
-    def test_can_add_dependency_same_node(self, config, simple_graph, simple_menus):
-        gen = DependencyGenerator(simple_graph, config, simple_menus)
-        assert not gen._can_add_dependency("A", "A")
-
-    def test_can_add_dependency_path_exists(self, config, simple_graph, simple_menus):
-        gen = DependencyGenerator(simple_graph, config, simple_menus)
-        assert not gen._can_add_dependency("A", "B")
-        assert not gen._can_add_dependency("B", "A")
-
-    def test_can_add_dependency_valid(self, config):
-        graph = nx.DiGraph()
-        graph.add_node("A")
-        graph.add_node("B")
-        menus = {}
-        for node_id in ["A", "B"]:
-            menu = MenuNode(id=node_id, category="Test", connections=[])
-            for i in range(3):
-                setting = Setting(
-                    id=f"{node_id}_setting_{i}",
-                    type=SettingType.BOOLEAN,
-                    value=False,
-                    state=SettingState.ENABLED,
-                    label=f"{node_id} Setting {i}",
-                )
-                menu.add_setting(setting)
-            menus[node_id] = menu
-        gen = DependencyGenerator(graph, config, menus)
-        assert gen._can_add_dependency("A", "B")
-
     def test_get_start_nodes(self, config, simple_graph, simple_menus):
         gen = DependencyGenerator(simple_graph, config, simple_menus)
         start_nodes = gen._get_start_nodes()

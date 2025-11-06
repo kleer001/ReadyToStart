@@ -77,4 +77,3 @@ class GenerationPipeline:
                 if attempt == max_attempts - 1:
                     raise
                 continue
-        raise ValueError("Failed after max attempts")

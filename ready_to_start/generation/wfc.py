@@ -143,4 +143,3 @@ class WFCGenerator:
                 if attempt == self.max_retries - 1:
                     return self.grid
                 continue
-        return self.grid

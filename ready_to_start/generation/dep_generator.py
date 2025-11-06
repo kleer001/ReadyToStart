@@ -5,11 +5,12 @@ import networkx as nx
 from ready_to_start.core.config_loader import GenerationConfig
 from ready_to_start.core.dependencies import Dependency, SimpleDependency
 from ready_to_start.core.enums import SettingState
+from ready_to_start.core.menu import MenuNode
 
 
 class DependencyGenerator:
     def __init__(
-        self, graph: nx.DiGraph, config: GenerationConfig, menus: dict[str, any]
+        self, graph: nx.DiGraph, config: GenerationConfig, menus: dict[str, MenuNode]
     ):
         self.graph = graph
         self.config = config
@@ -69,6 +70,8 @@ class DependencyGenerator:
 
             if not current_menu or not next_menu:
                 continue
+            if not current_menu.settings or not next_menu.settings:
+                continue
 
             current_setting = random.choice(current_menu.settings)
             next_setting = random.choice(next_menu.settings)
@@ -84,6 +87,9 @@ class DependencyGenerator:
         for menu in self.menus.values():
             all_settings.extend(menu.settings)
 
+        if not all_settings:
+            return
+
         num_cross = min(int(len(all_settings) * 0.1), 20)
 
         for _ in range(num_cross):
@@ -95,15 +101,6 @@ class DependencyGenerator:
                 deps[setting_b.id].append(
                     SimpleDependency(setting_a.id, SettingState.ENABLED)
                 )
-
-    def _can_add_dependency(self, node_a: str, node_b: str) -> bool:
-        if node_a == node_b:
-            return False
-        if nx.has_path(self.graph, node_a, node_b):
-            return False
-        if nx.has_path(self.graph, node_b, node_a):
-            return False
-        return True
 
     def _get_start_nodes(self) -> list[str]:
         return [n for n in self.graph.nodes() if self.graph.in_degree(n) == 0]
