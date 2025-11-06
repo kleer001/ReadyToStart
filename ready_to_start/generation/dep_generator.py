@@ -1,5 +1,4 @@
 import random
-from typing import Dict, List
 
 import networkx as nx
 
@@ -12,9 +11,9 @@ class DependencyGenerator:
     def __init__(self, graph: nx.DiGraph, config: GenerationConfig):
         self.graph = graph
         self.config = config
-        self.critical_path: List[str] = []
+        self.critical_path: list[str] = []
 
-    def generate_dependencies(self) -> Dict[str, List[Dependency]]:
+    def generate_dependencies(self) -> dict[str, list[Dependency]]:
         self.critical_path = self._find_critical_path()
         deps = {}
 
@@ -23,7 +22,7 @@ class DependencyGenerator:
 
         return deps
 
-    def _find_critical_path(self) -> List[str]:
+    def _find_critical_path(self) -> list[str]:
         start_nodes = self._get_start_nodes()
         end_nodes = self._get_end_nodes()
 
@@ -37,7 +36,9 @@ class DependencyGenerator:
 
         return longest_path
 
-    def _add_critical_path_dependencies(self, deps: Dict[str, List[Dependency]]) -> None:
+    def _add_critical_path_dependencies(
+        self, deps: dict[str, list[Dependency]]
+    ) -> None:
         for i in range(len(self.critical_path) - 1):
             current = self.critical_path[i]
             next_node = self.critical_path[i + 1]
@@ -47,7 +48,7 @@ class DependencyGenerator:
 
             deps[next_node].append(SimpleDependency(current, SettingState.ENABLED))
 
-    def _add_cross_dependencies(self, deps: Dict[str, List[Dependency]]) -> None:
+    def _add_cross_dependencies(self, deps: dict[str, list[Dependency]]) -> None:
         nodes = list(self.graph.nodes())
         num_cross = int(len(nodes) * 0.2)
 
@@ -69,8 +70,8 @@ class DependencyGenerator:
             return False
         return True
 
-    def _get_start_nodes(self) -> List[str]:
+    def _get_start_nodes(self) -> list[str]:
         return [n for n in self.graph.nodes() if self.graph.in_degree(n) == 0]
 
-    def _get_end_nodes(self) -> List[str]:
+    def _get_end_nodes(self) -> list[str]:
         return [n for n in self.graph.nodes() if self.graph.out_degree(n) == 0]

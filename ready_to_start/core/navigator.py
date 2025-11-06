@@ -1,6 +1,5 @@
 """Menu navigation logic."""
 
-
 from ready_to_start.core.game_state import GameState
 
 

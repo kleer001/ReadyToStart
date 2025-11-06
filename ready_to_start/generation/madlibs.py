@@ -1,17 +1,18 @@
 import random
 import re
-from typing import Dict, List, Optional
 
 from ready_to_start.core.config_loader import ConfigLoader
 
 
 class MadLibsEngine:
-    def __init__(self, templates: Dict[str, List[str]], config_loader: ConfigLoader):
+    def __init__(self, templates: dict[str, list[str]], config_loader: ConfigLoader):
         self.templates = templates
         self.config_loader = config_loader
         self.vocab = self._load_vocabulary()
 
-    def fill_template(self, template: str, context: Optional[Dict[str, str]] = None) -> str:
+    def fill_template(
+        self, template: str, context: dict[str, str] | None = None
+    ) -> str:
         if context is None:
             context = {}
 
@@ -39,10 +40,10 @@ class MadLibsEngine:
         context = {"category": category, "index": str(index)}
         return self.fill_template(template, context)
 
-    def _load_vocabulary(self) -> Dict[str, List[str]]:
+    def _load_vocabulary(self) -> dict[str, list[str]]:
         return self.config_loader.load_vocabulary()
 
-    def _get_placeholder_value(self, placeholder: str, context: Dict[str, str]) -> str:
+    def _get_placeholder_value(self, placeholder: str, context: dict[str, str]) -> str:
         if placeholder in context:
             return context[placeholder]
         if placeholder in self.vocab:

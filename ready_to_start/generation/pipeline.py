@@ -1,5 +1,4 @@
 import random
-from typing import Optional
 
 from ready_to_start.core.config_loader import ConfigLoader
 from ready_to_start.core.game_state import GameState
@@ -21,7 +20,7 @@ class GenerationPipeline:
         self.madlibs = MadLibsEngine(self.templates, self.loader)
         self.compiler = SettingCompiler(self.config, self.madlibs)
 
-    def generate(self, seed: Optional[int] = None) -> GameState:
+    def generate(self, seed: int | None = None) -> GameState:
         if seed is not None:
             random.seed(seed)
 
@@ -44,7 +43,9 @@ class GenerationPipeline:
             is_critical = node_id in critical_path
 
             menu = MenuNode(
-                id=node_id, category=category, connections=list(graph.successors(node_id))
+                id=node_id,
+                category=category,
+                connections=list(graph.successors(node_id)),
             )
 
             settings = self.compiler.compile_settings(node_id, category, is_critical)
@@ -61,6 +62,8 @@ class GenerationPipeline:
                 game_state.resolver.add_dependency(setting_id, dep)
 
         start_nodes = [n for n in graph.nodes() if graph.in_degree(n) == 0]
-        game_state.current_menu = start_nodes[0] if start_nodes else list(graph.nodes())[0]
+        game_state.current_menu = (
+            start_nodes[0] if start_nodes else list(graph.nodes())[0]
+        )
 
         return game_state
