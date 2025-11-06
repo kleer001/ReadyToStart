@@ -177,13 +177,29 @@ class UILoop:
 
         setting = visible_settings[self.selected_index]
 
+        # Check dependencies for LOCKED settings - show hints about what's needed
         if setting.state == SettingState.LOCKED:
-            self.message_display.add_message(
-                f"Setting '{setting.label}' is locked", MessageType.WARNING
-            )
+            if not self.game_state.resolver.can_enable(setting.id, self.game_state):
+                hints = self.game_state.get_dependency_hints(setting.id)
+                if hints:
+                    self.message_display.add_message(
+                        f"'{setting.label}' is locked. To unlock:", MessageType.WARNING
+                    )
+                    for hint in hints:
+                        self.message_display.add_message(f"  • {hint}", MessageType.WARNING)
+                else:
+                    self.message_display.add_message(
+                        f"'{setting.label}' is locked - dependencies not met",
+                        MessageType.WARNING,
+                    )
+            else:
+                # Dependencies met but still locked (shouldn't happen with propagate_changes)
+                self.message_display.add_message(
+                    f"'{setting.label}' is locked", MessageType.WARNING
+                )
             return
 
-        # Check dependencies only if setting is currently disabled
+        # Check dependencies for DISABLED settings
         if (
             setting.state == SettingState.DISABLED
             and not self.game_state.resolver.can_enable(setting.id, self.game_state)
@@ -275,13 +291,29 @@ class UILoop:
 
         setting = visible_settings[setting_index]
 
+        # Check dependencies for LOCKED settings - show hints about what's needed
         if setting.state == SettingState.LOCKED:
-            self.message_display.add_message(
-                f"Setting '{setting.label}' is locked", MessageType.WARNING
-            )
+            if not self.game_state.resolver.can_enable(setting.id, self.game_state):
+                hints = self.game_state.get_dependency_hints(setting.id)
+                if hints:
+                    self.message_display.add_message(
+                        f"'{setting.label}' is locked. To unlock:", MessageType.WARNING
+                    )
+                    for hint in hints:
+                        self.message_display.add_message(f"  • {hint}", MessageType.WARNING)
+                else:
+                    self.message_display.add_message(
+                        f"'{setting.label}' is locked - dependencies not met",
+                        MessageType.WARNING,
+                    )
+            else:
+                # Dependencies met but still locked (shouldn't happen with propagate_changes)
+                self.message_display.add_message(
+                    f"'{setting.label}' is locked", MessageType.WARNING
+                )
             return
 
-        # Check dependencies only if setting is currently disabled
+        # Check dependencies for DISABLED settings
         if (
             setting.state == SettingState.DISABLED
             and not self.game_state.resolver.can_enable(setting.id, self.game_state)
