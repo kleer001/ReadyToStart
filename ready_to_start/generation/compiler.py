@@ -6,6 +6,23 @@ from ready_to_start.core.enums import SettingState, SettingType
 from ready_to_start.core.types import Setting
 from ready_to_start.generation.madlibs import MadLibsEngine
 
+DEFAULT_MIN_VALUE = 0
+DEFAULT_MAX_VALUE = 100
+
+CRITICAL_TYPE_WEIGHTS = {
+    SettingType.BOOLEAN: 0.5,
+    SettingType.INTEGER: 0.2,
+    SettingType.FLOAT: 0.2,
+    SettingType.STRING: 0.1,
+}
+
+NORMAL_TYPE_WEIGHTS = {
+    SettingType.BOOLEAN: 0.25,
+    SettingType.INTEGER: 0.25,
+    SettingType.FLOAT: 0.25,
+    SettingType.STRING: 0.25,
+}
+
 
 class SettingCompiler:
     def __init__(self, config: GenerationConfig, madlibs: MadLibsEngine):
@@ -39,8 +56,8 @@ class SettingCompiler:
         )
 
         if setting_type in [SettingType.INTEGER, SettingType.FLOAT]:
-            setting.min_value = 0
-            setting.max_value = 100
+            setting.min_value = DEFAULT_MIN_VALUE
+            setting.max_value = DEFAULT_MAX_VALUE
 
         return setting
 
@@ -48,17 +65,9 @@ class SettingCompiler:
         return self.madlibs.config_loader.load_categories()
 
     def _choose_type(self, is_critical: bool) -> SettingType:
-        if is_critical:
-            weights = [0.5, 0.2, 0.2, 0.1]
-        else:
-            weights = [0.25, 0.25, 0.25, 0.25]
-
-        types = [
-            SettingType.BOOLEAN,
-            SettingType.INTEGER,
-            SettingType.FLOAT,
-            SettingType.STRING,
-        ]
+        weights_map = CRITICAL_TYPE_WEIGHTS if is_critical else NORMAL_TYPE_WEIGHTS
+        types = list(weights_map.keys())
+        weights = list(weights_map.values())
         return random.choices(types, weights=weights)[0]
 
     def _default_value(self, setting_type: SettingType) -> Any:

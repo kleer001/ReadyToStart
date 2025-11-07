@@ -44,7 +44,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=ready_to_start --cov-report=html --cov-report=term"
+addopts = "-v"
 
 [tool.coverage.run]
 source = ["ready_to_start"]

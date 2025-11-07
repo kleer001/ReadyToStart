@@ -90,21 +90,25 @@ class TestTopologyConverter:
         assert node_id == "Audio_2_3"
 
     def test_get_start_nodes(self, config):
+        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+
         converter = TopologyConverter(config)
         converter.graph.add_node("A")
         converter.graph.add_node("B")
         converter.graph.add_edge("A", "B")
 
-        start_nodes = converter._get_start_nodes()
+        start_nodes = GraphAnalyzer.get_start_nodes(converter.graph)
         assert start_nodes == ["A"]
 
     def test_get_end_nodes(self, config):
+        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+
         converter = TopologyConverter(config)
         converter.graph.add_node("A")
         converter.graph.add_node("B")
         converter.graph.add_edge("A", "B")
 
-        end_nodes = converter._get_end_nodes()
+        end_nodes = GraphAnalyzer.get_end_nodes(converter.graph)
         assert end_nodes == ["B"]
 
     def test_grid_with_uncollapsed_cells(self, config):

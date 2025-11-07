@@ -78,14 +78,22 @@ class TestDependencyGenerator:
                 assert "_setting_" in dep.setting_id
                 assert dep.required_state == SettingState.ENABLED
 
+    def test_find_critical_path(self, config, simple_graph, simple_menus):
+        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+
+        path = GraphAnalyzer.find_critical_path(simple_graph)
+        assert path == ["A", "B", "C"]
+
     def test_get_start_nodes(self, config, simple_graph, simple_menus):
-        gen = DependencyGenerator(simple_graph, config, simple_menus)
-        start_nodes = gen._get_start_nodes()
+        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+
+        start_nodes = GraphAnalyzer.get_start_nodes(simple_graph)
         assert start_nodes == ["A"]
 
     def test_get_end_nodes(self, config, simple_graph, simple_menus):
-        gen = DependencyGenerator(simple_graph, config, simple_menus)
-        end_nodes = gen._get_end_nodes()
+        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+
+        end_nodes = GraphAnalyzer.get_end_nodes(simple_graph)
         assert end_nodes == ["C"]
 
     def test_complex_graph(self, config):

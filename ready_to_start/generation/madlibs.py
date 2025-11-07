@@ -26,18 +26,22 @@ class MadLibsEngine:
         return result
 
     def generate_requirement(self, node_id: str, category: str) -> str:
-        template = self._select_template("requirement_templates")
-        context = {"category": category, "node_id": node_id}
-        return self.fill_template(template, context)
+        return self._generate_from_template(
+            "requirement_templates", {"category": category, "node_id": node_id}
+        )
 
     def generate_error(self, setting_id: str) -> str:
-        template = self._select_template("error_templates")
-        context = {"setting": setting_id}
-        return self.fill_template(template, context)
+        return self._generate_from_template("error_templates", {"setting": setting_id})
 
     def generate_setting_label(self, category: str, index: int) -> str:
-        template = self._select_template("setting_labels")
-        context = {"category": category, "index": str(index)}
+        return self._generate_from_template(
+            "setting_labels", {"category": category, "index": str(index)}
+        )
+
+    def _generate_from_template(
+        self, template_type: str, context: dict[str, str]
+    ) -> str:
+        template = self._select_template(template_type)
         return self.fill_template(template, context)
 
     def _load_vocabulary(self) -> dict[str, list[str]]:
