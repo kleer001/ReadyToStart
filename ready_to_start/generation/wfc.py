@@ -67,14 +67,25 @@ class WFCGrid:
         )
 
 
+DEFAULT_GRID_SIZE = 5
+MAX_RETRIES = 3
+ITERATION_SAFETY_MULTIPLIER = 2
+
+
 class WFCGenerator:
     def __init__(
-        self, rules: dict[str, dict[str, list[str]]], config: GenerationConfig
+        self,
+        rules: dict[str, dict[str, list[str]]],
+        config: GenerationConfig,
+        grid_width: int = DEFAULT_GRID_SIZE,
+        grid_height: int = DEFAULT_GRID_SIZE,
     ):
         self.rules = rules
         self.config = config
-        self.grid = WFCGrid(width=5, height=5)
-        self.max_retries = 3
+        self.grid = WFCGrid(width=grid_width, height=grid_height)
+        self.grid_width = grid_width
+        self.grid_height = grid_height
+        self.max_retries = MAX_RETRIES
 
     def initialize(self, all_categories: set[str]) -> None:
         for cell in self.grid.cells.values():
@@ -112,12 +123,9 @@ class WFCGenerator:
         all_categories = set(self.rules.keys())
         self.initialize(all_categories)
 
-        start_pos = (self.grid.width // 2, self.grid.height // 2)
-        start_cell = self.grid.cells[start_pos]
-        start_cell.collapse()
-        self.propagate(start_cell)
+        self._collapse_starting_cell()
 
-        max_iterations = self.grid.width * self.grid.height * 2
+        max_iterations = self._calculate_max_iterations()
         iterations = 0
 
         while not self.grid.is_complete() and iterations < max_iterations:
@@ -136,10 +144,19 @@ class WFCGenerator:
 
     def generate(self) -> WFCGrid:
         for attempt in range(self.max_retries):
-            self.grid = WFCGrid(width=5, height=5)
+            self.grid = WFCGrid(width=self.grid_width, height=self.grid_height)
             try:
                 return self._generate_once()
             except ContradictionError:
                 if attempt == self.max_retries - 1:
                     return self.grid
                 continue
+
+    def _collapse_starting_cell(self) -> None:
+        start_pos = (self.grid.width // 2, self.grid.height // 2)
+        start_cell = self.grid.cells[start_pos]
+        start_cell.collapse()
+        self.propagate(start_cell)
+
+    def _calculate_max_iterations(self) -> int:
+        return self.grid.width * self.grid.height * ITERATION_SAFETY_MULTIPLIER

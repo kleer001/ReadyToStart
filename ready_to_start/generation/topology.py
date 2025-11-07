@@ -1,7 +1,10 @@
 import networkx as nx
 
 from ready_to_start.core.config_loader import GenerationConfig
+from ready_to_start.generation.graph_analyzer import GraphAnalyzer
 from ready_to_start.generation.wfc import WFCGrid
+
+MIN_GRAPH_NODES = 3
 
 
 class TopologyConverter:
@@ -18,7 +21,7 @@ class TopologyConverter:
     def validate_graph(self) -> bool:
         if not self.graph.nodes():
             return False
-        if len(self.graph.nodes()) < 3:
+        if len(self.graph.nodes()) < MIN_GRAPH_NODES:
             return False
         if not nx.is_weakly_connected(self.graph):
             return False
@@ -28,23 +31,11 @@ class TopologyConverter:
         if not self.graph.nodes():
             return
 
-        start_nodes = self._get_start_nodes()
-
+        start_nodes = GraphAnalyzer.get_start_nodes(self.graph)
         if start_nodes:
-            max_reachable = set()
-            for start in start_nodes:
-                reachable = self._get_reachable_from_single_start(start)
-                if len(reachable) > len(max_reachable):
-                    max_reachable = reachable
-
-            unreachable = set(self.graph.nodes()) - max_reachable
-            self.graph.remove_nodes_from(unreachable)
+            self._prune_using_start_nodes(start_nodes)
         else:
-            components = list(nx.weakly_connected_components(self.graph))
-            if len(components) > 1:
-                largest = max(components, key=len)
-                to_remove = set(self.graph.nodes()) - largest
-                self.graph.remove_nodes_from(to_remove)
+            self._prune_using_components()
 
     def get_critical_path(self) -> list[str]:
         if not self.critical_path:
@@ -79,48 +70,29 @@ class TopologyConverter:
         return len(path) >= self.config.min_path_length
 
     def _find_critical_path(self) -> list[str]:
-        start_nodes = self._get_start_nodes()
-        end_nodes = self._get_end_nodes()
+        path = GraphAnalyzer.find_critical_path(self.graph)
 
-        if not start_nodes or not end_nodes:
+        if not path:
             nodes = list(self.graph.nodes())
             if len(nodes) < self.config.min_path_length:
                 return []
             return nodes[: self.config.min_path_length]
 
-        longest_path = []
+        return path
+
+    def _prune_using_start_nodes(self, start_nodes: list[str]) -> None:
+        max_reachable = set()
         for start in start_nodes:
-            for end in end_nodes:
-                if nx.has_path(self.graph, start, end):
-                    path = nx.shortest_path(self.graph, start, end)
-                    if len(path) > len(longest_path):
-                        longest_path = path
+            reachable = GraphAnalyzer.get_reachable_from(self.graph, start)
+            if len(reachable) > len(max_reachable):
+                max_reachable = reachable
 
-        return longest_path
+        unreachable = set(self.graph.nodes()) - max_reachable
+        self.graph.remove_nodes_from(unreachable)
 
-    def _get_start_nodes(self) -> list[str]:
-        return [n for n in self.graph.nodes() if self.graph.in_degree(n) == 0]
-
-    def _get_end_nodes(self) -> list[str]:
-        return [n for n in self.graph.nodes() if self.graph.out_degree(n) == 0]
-
-    def _get_reachable_nodes(self, end_nodes: list[str]) -> set[str]:
-        reachable = set()
-        for end in end_nodes:
-            ancestors = nx.ancestors(self.graph, end)
-            reachable.update(ancestors)
-            reachable.add(end)
-        return reachable
-
-    def _get_reachable_from_starts(self, start_nodes: list[str]) -> set[str]:
-        reachable = set()
-        for start in start_nodes:
-            descendants = nx.descendants(self.graph, start)
-            reachable.update(descendants)
-            reachable.add(start)
-        return reachable
-
-    def _get_reachable_from_single_start(self, start: str) -> set[str]:
-        descendants = nx.descendants(self.graph, start)
-        descendants.add(start)
-        return descendants
+    def _prune_using_components(self) -> None:
+        components = list(nx.weakly_connected_components(self.graph))
+        if len(components) > 1:
+            largest = max(components, key=len)
+            to_remove = set(self.graph.nodes()) - largest
+            self.graph.remove_nodes_from(to_remove)
