@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from random import Random
-from typing import Optional
 
 
 class Glitch(ABC):
@@ -104,7 +103,7 @@ class OffsetGlitch(Glitch):
 
 
 class GlitchComposite:
-    def __init__(self, glitches: list[Glitch], random: Optional[Random] = None):
+    def __init__(self, glitches: list[Glitch], random: Random | None = None):
         self.glitches = glitches
         self.random = random or Random()
 
@@ -116,7 +115,7 @@ class GlitchComposite:
 
 
 class GlitchEngine:
-    def __init__(self, intensity: float = 0.3, random: Optional[Random] = None):
+    def __init__(self, intensity: float = 0.3, random: Random | None = None):
         self.intensity = intensity
         self.random = random or Random()
         self.enabled = False

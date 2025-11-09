@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from random import Random
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ready_to_start.core.enums import SettingState
 from ready_to_start.core.game_state import GameState
@@ -10,7 +10,7 @@ from ready_to_start.core.game_state import GameState
 @dataclass
 class EffectContext:
     game_state: GameState
-    ui_state: Dict[str, Any]
+    ui_state: dict[str, Any]
     random: Random
 
 
@@ -62,7 +62,7 @@ class HideSettingEffect(Effect):
 class ShuffleMenuEffect(Effect):
     def __init__(self, effect_id: str, duration: int = 3):
         super().__init__(effect_id, duration)
-        self.original_order: Dict[str, list[str]] = {}
+        self.original_order: dict[str, list[str]] = {}
 
     def apply(self, context: EffectContext) -> None:
         self.remaining = self.duration
@@ -121,7 +121,7 @@ class BlinkSettingEffect(Effect):
     def __init__(self, effect_id: str, setting_id: str, duration: int = 8):
         super().__init__(effect_id, duration)
         self.setting_id = setting_id
-        self.original_state: Optional[SettingState] = None
+        self.original_state: SettingState | None = None
 
     def apply(self, context: EffectContext) -> None:
         self.remaining = self.duration
@@ -188,7 +188,7 @@ class DisableInputEffect(Effect):
 
 class EffectFactory:
     @staticmethod
-    def from_config(config_dict: Dict[str, Any]) -> Effect:
+    def from_config(config_dict: dict[str, Any]) -> Effect:
         effect_type = config_dict["type"]
         effect_id = config_dict["id"]
 

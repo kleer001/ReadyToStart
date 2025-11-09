@@ -1,13 +1,16 @@
 import configparser
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 from random import Random
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ready_to_start.anti_patterns.effects import Effect, EffectContext, EffectFactory
 from ready_to_start.anti_patterns.glitches import GlitchEngine
 from ready_to_start.anti_patterns.messages import FakeMessageGenerator, MessageScheduler
-from ready_to_start.anti_patterns.triggers import Trigger, TriggerContext, TriggerFactory
+from ready_to_start.anti_patterns.triggers import (
+    Trigger,
+    TriggerContext,
+    TriggerFactory,
+)
 from ready_to_start.core.game_state import GameState
 
 
@@ -22,17 +25,18 @@ class AntiPattern:
 
 class AntiPatternEngine:
     def __init__(
-        self, game_state: GameState, ui_state: Dict[str, Any], seed: Optional[int] = None
+        self,
+        game_state: GameState,
+        ui_state: dict[str, Any],
+        seed: int | None = None,
     ):
         self.game_state = game_state
         self.ui_state = ui_state
         self.random = Random(seed)
 
-        self.patterns: List[AntiPattern] = []
-        self.active_effects: List[Effect] = []
-        self.trigger_context = TriggerContext(
-            game_state=game_state, random=self.random
-        )
+        self.patterns: list[AntiPattern] = []
+        self.active_effects: list[Effect] = []
+        self.trigger_context = TriggerContext(game_state=game_state, random=self.random)
         self.effect_context = EffectContext(
             game_state=game_state, ui_state=ui_state, random=self.random
         )
@@ -147,11 +151,13 @@ class AntiPatternEngine:
                 self._activate_pattern(pattern)
 
     def _activate_pattern(self, pattern: AntiPattern) -> None:
-        pattern.effect.apply(self.effect_context)
-        pattern.trigger.on_activate()
-        pattern.remaining_cooldown = pattern.cooldown
-
-        self.active_effects.append(pattern.effect)
+        if pattern.effect not in self.active_effects:
+            pattern.effect.apply(self.effect_context)
+            pattern.trigger.on_activate()
+            pattern.remaining_cooldown = pattern.cooldown
+            self.active_effects.append(pattern.effect)
+        else:
+            pattern.remaining_cooldown = pattern.cooldown
 
     def _update_cooldowns(self) -> None:
         for pattern in self.patterns:
@@ -171,7 +177,7 @@ class AntiPatternEngine:
     def schedule_fake_message(self, delay: int, category: str = "generic") -> None:
         self.message_scheduler.schedule_message(delay, category)
 
-    def get_active_effect_ids(self) -> List[str]:
+    def get_active_effect_ids(self) -> list[str]:
         return [effect.id for effect in self.active_effects]
 
     def is_effect_active(self, effect_id: str) -> bool:

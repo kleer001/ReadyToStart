@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from random import Random
-from typing import Any, Dict
+from typing import Any
 
 from ready_to_start.core.game_state import GameState
 
@@ -9,8 +9,8 @@ from ready_to_start.core.game_state import GameState
 @dataclass
 class TriggerContext:
     game_state: GameState
-    counters: Dict[str, int] = field(default_factory=dict)
-    events: Dict[str, int] = field(default_factory=dict)
+    counters: dict[str, int] = field(default_factory=dict)
+    events: dict[str, int] = field(default_factory=dict)
     random: Random = field(default_factory=Random)
 
 
@@ -121,7 +121,7 @@ class OnceTrigger(Trigger):
 
 class TriggerFactory:
     @staticmethod
-    def from_config(config_dict: Dict[str, Any]) -> Trigger:
+    def from_config(config_dict: dict[str, Any]) -> Trigger:
         trigger_type = config_dict["type"]
         trigger_id = config_dict["id"]
 

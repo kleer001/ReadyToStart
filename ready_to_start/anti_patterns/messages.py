@@ -1,8 +1,6 @@
 import configparser
 from dataclasses import dataclass
-from pathlib import Path
 from random import Random
-from typing import Optional
 
 
 @dataclass
@@ -13,7 +11,7 @@ class FakeMessage:
 
 
 class FakeMessageGenerator:
-    def __init__(self, random: Optional[Random] = None):
+    def __init__(self, random: Random | None = None):
         self.random = random or Random()
         self.templates: dict[str, list[str]] = {}
         self.components: dict[str, list[str]] = {}
@@ -72,7 +70,9 @@ class FakeMessageGenerator:
 
 
 class MessageScheduler:
-    def __init__(self, generator: FakeMessageGenerator, random: Optional[Random] = None):
+    def __init__(
+        self, generator: FakeMessageGenerator, random: Random | None = None
+    ):
         self.generator = generator
         self.random = random or Random()
         self.scheduled: list[tuple[int, FakeMessage]] = []
