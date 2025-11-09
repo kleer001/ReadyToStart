@@ -59,6 +59,10 @@ class KeyboardReader:
                 return Key.UP
             elif ch == "j" or ch == "J":
                 return Key.DOWN
+            elif ch == "h" or ch == "H":
+                return Key.LEFT
+            elif ch == "l" or ch == "L":
+                return Key.RIGHT
             else:
                 return ch
         finally:
@@ -102,6 +106,11 @@ class KeyboardReader:
                             return Key.UP
                         elif decoded.lower() == "j":
                             return Key.DOWN
+                    elif decoded in "hlHL":
+                        if decoded.lower() == "h":
+                            return Key.LEFT
+                        elif decoded.lower() == "l":
+                            return Key.RIGHT
                     return decoded
         except ImportError:
             pass
