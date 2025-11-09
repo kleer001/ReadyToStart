@@ -7,18 +7,21 @@ class DesktopGUIRenderer(EraRenderer):
         output = []
 
         output.append("┌" + "─" * (self.width - 2) + "┐")
-        output.append("│ File  Edit  View  Tools  Help" + " " * (self.width - 33) + "│")
+        menu_bar = "File  Edit  View  Tools  Help"
+        output.append("│ " + menu_bar[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("├" + "─" * (self.width - 2) + "┤")
-        output.append("│ " + menu_node.category.ljust(self.width - 4) + " │")
+        output.append("│ " + menu_node.category[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("├" + "─" * (self.width - 2) + "┤")
 
         for setting in settings[:self.height - 9]:
             check = "[✓]" if setting.state == SettingState.ENABLED else "[ ]"
-            line = f" {check} {setting.label[:65]}"
+            label_width = self.width - 2 - 1 - len(check) - 1
+            line = f" {check} {setting.label[:label_width]}"
             output.append("│" + line[:self.width - 2].ljust(self.width - 2) + "│")
 
         output.append("├" + "─" * (self.width - 2) + "┤")
-        output.append("│ [  OK  ] [  Apply  ] [ Cancel ]" + " " * (self.width - 35) + "│")
+        buttons = "[  OK  ] [  Apply  ] [ Cancel ]"
+        output.append("│ " + buttons[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("└" + "─" * (self.width - 2) + "┘")
 
         return "\n".join(output)

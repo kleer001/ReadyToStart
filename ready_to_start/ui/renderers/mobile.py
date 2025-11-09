@@ -7,14 +7,18 @@ class MobileRenderer(EraRenderer):
         output = []
 
         output.append("╭" + "─" * (self.width - 2) + "╮")
-        output.append("│ ☰  " + menu_node.category.ljust(self.width - 7) + " ⋮ │")
+        header = f"☰  {menu_node.category}"
+        header_padded = header[:self.width - 8].ljust(self.width - 8) + " ⋮"
+        output.append("│ " + header_padded[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("╰" + "─" * (self.width - 2) + "╯")
         output.append("")
 
         for setting in settings[:self.height - 6]:
-            toggle = "●" if setting.state == SettingState.ENABLED else "○"
+            toggle = " ●" if setting.state == SettingState.ENABLED else " ○"
+            label_width = self.width - 4 - len(toggle)
+            line = setting.label[:label_width].ljust(label_width) + toggle
             output.append("┌" + "─" * (self.width - 2) + "┐")
-            output.append("│ " + setting.label[:self.width - 10].ljust(self.width - 8) + toggle + "   │")
+            output.append("│ " + line[:self.width - 4].ljust(self.width - 4) + " │")
             output.append("└" + "─" * (self.width - 2) + "┘")
             output.append("")
 

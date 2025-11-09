@@ -7,13 +7,14 @@ class ModernRenderer(EraRenderer):
         output = []
 
         output.append("╭" + "─" * (self.width - 2) + "╮")
-        output.append("│ " + menu_node.category.ljust(self.width - 4) + " │")
+        output.append("│ " + menu_node.category[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("├" + "─" * (self.width - 2) + "┤")
         output.append("│" + " " * (self.width - 2) + "│")
 
         for setting in settings[:self.height - 8]:
             toggle = "◉ On " if setting.state == SettingState.ENABLED else "○ Off"
-            line = f"  {setting.label[:50]:<50s} {toggle}"
+            label_width = self.width - 4 - 2 - len(toggle)
+            line = f"  {setting.label[:label_width]:<{label_width}s}{toggle}"
             output.append("│ " + line[:self.width - 4].ljust(self.width - 4) + " │")
 
         output.append("│" + " " * (self.width - 2) + "│")

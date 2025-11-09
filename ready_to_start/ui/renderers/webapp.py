@@ -7,19 +7,23 @@ class WebAppRenderer(EraRenderer):
         output = []
 
         output.append("┌" + "─" * (self.width - 2) + "┐")
-        output.append("│ Settings › " + menu_node.category.ljust(self.width - 15) + " │")
+        header = f"Settings › {menu_node.category}"
+        output.append("│ " + header[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("├" + "─" * (self.width - 2) + "┤")
-        output.append("│ General | Advanced | Tools |" + " " * (self.width - 32) + "│")
+        tabs = "General | Advanced | Tools"
+        output.append("│ " + tabs[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("├" + "─" * (self.width - 2) + "┤")
 
         for setting in settings[:self.height - 9]:
             toggle = "[ON ]" if setting.state == SettingState.ENABLED else "[OFF]"
-            line = f"  {toggle} {setting.label[:60]}"
+            label_width = self.width - 4 - 2 - len(toggle) - 1
+            line = f"  {toggle} {setting.label[:label_width]}"
             output.append("│ " + line[:self.width - 4].ljust(self.width - 4) + " │")
 
         output.append("│" + " " * (self.width - 2) + "│")
         output.append("├" + "─" * (self.width - 2) + "┤")
-        output.append("│ < Back" + " " * (self.width - 20) + "Save Changes > │")
+        footer = "< Back" + "Save Changes >".rjust(self.width - 10)
+        output.append("│ " + footer[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("└" + "─" * (self.width - 2) + "┘")
 
         return "\n".join(output)

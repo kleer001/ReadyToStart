@@ -6,23 +6,26 @@ class Win95Renderer(EraRenderer):
     def render_menu(self, menu_node, settings: list) -> str:
         output = []
 
-        title = f" {menu_node.category} "
         output.append("┌" + "─" * (self.width - 2) + "┐")
-        output.append("│" + title.ljust(self.width - 4) + " [X]│")
+        title = f" {menu_node.category[:self.width - 10]}"
+        title_bar = title.ljust(self.width - 6) + " [X]"
+        output.append("│" + title_bar[:self.width - 2].ljust(self.width - 2) + "│")
         output.append("├" + "─" * (self.width - 2) + "┤")
 
-        output.append("│ General | Advanced | About │" + " " * (self.width - 35) + "│")
+        tabs = "General | Advanced | About"
+        output.append("│ " + tabs[:self.width - 4].ljust(self.width - 4) + " │")
         output.append("├" + "─" * (self.width - 2) + "┤")
 
         for setting in settings[:self.height - 8]:
             checkbox = "[X]" if setting.state == SettingState.ENABLED else "[ ]"
-            label = f" {checkbox} {setting.label}"
-            output.append("│" + label.ljust(self.width - 2) + "│")
+            label_width = self.width - 2 - 1 - len(checkbox) - 1
+            label = f" {checkbox} {setting.label[:label_width]}"
+            output.append("│" + label[:self.width - 2].ljust(self.width - 2) + "│")
 
         output.append("├" + "─" * (self.width - 2) + "┤")
 
-        buttons = " [ OK ] [ Cancel ] [ Apply ] "
-        output.append("│" + buttons.center(self.width - 2) + "│")
+        buttons = "[ OK ] [ Cancel ] [ Apply ]"
+        output.append("│ " + buttons[:self.width - 4].center(self.width - 4) + " │")
         output.append("└" + "─" * (self.width - 2) + "┘")
 
         return "\n".join(output)
