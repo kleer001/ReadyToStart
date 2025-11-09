@@ -1,0 +1,95 @@
+{
+  "breaks": [
+    {
+      "id": "game_start_meta",
+      "event": "game_start",
+      "condition": "first_time",
+      "show_once": true,
+      "text": "Welcome to a game about settings menus. Yes, really. No, there's no 'actual game' hidden underneath. This is it. Enjoy?",
+      "pause": true
+    },
+    {
+      "id": "first_lock_awareness",
+      "event": "encounter_locked_setting",
+      "condition": "first_time",
+      "show_once": true,
+      "text": "Ah, your first locked setting. This is the core 'gameplay.' You'll be doing this for a while. Sorry about that.",
+      "pause": false
+    },
+    {
+      "id": "frustrated_player",
+      "event": "many_failures",
+      "condition": "frustrated",
+      "show_once": true,
+      "text": "You seem frustrated. Would you like me to just tell you the answer? [Hint: I can't. I'm just text in a JSON file.]",
+      "pause": true
+    },
+    {
+      "id": "deep_layer_horror",
+      "event": "layer_transition",
+      "condition": "far_in_game",
+      "show_once": true,
+      "text": "You're STILL playing this? At this point you're not configuring settings, you're making life choices. Questionable ones.",
+      "pause": true
+    },
+    {
+      "id": "punch_card_absurdity",
+      "event": "enter_punch_card_layer",
+      "show_once": true,
+      "text": "Punch cards. We've reached punch cards. I want you to really think about what you're doing with your time right now.",
+      "pause": true,
+      "action": "cursor_movement"
+    },
+    {
+      "id": "quantum_confusion",
+      "event": "enter_quantum_layer",
+      "show_once": true,
+      "text": "Quantum settings. The settings exist in superposition - both configured and unconfigured until you observe them. Which is nonsense, but so is this entire game.",
+      "pause": true
+    },
+    {
+      "id": "meta_layer_recursion",
+      "event": "enter_meta_layer",
+      "show_once": true,
+      "text": "You're now configuring the settings that configure the settings. If you're experiencing an existential crisis, that's working as intended.",
+      "pause": true
+    },
+    {
+      "id": "near_end",
+      "event": "approaching_final_layer",
+      "show_once": true,
+      "text": "You're almost at the end. Was it worth it? Will it ever be worth it? Are these questions the game is asking, or are you asking them? Yes.",
+      "pause": true
+    },
+    {
+      "id": "final_layer_reveal",
+      "event": "enter_final_layer",
+      "show_once": true,
+      "text": "This is it. The final layer. After all those settings menus, all that configuration, it comes down to this. I hope you're ready.",
+      "pause": true
+    },
+    {
+      "id": "quit_commentary",
+      "event": "player_quits",
+      "show_once": false,
+      "text": "Quitting? Fair. I wouldn't want to configure any more settings either. Your progress has been... well, it exists.",
+      "pause": false
+    },
+    {
+      "id": "help_request",
+      "event": "viewing_help",
+      "condition": "first_time",
+      "show_once": true,
+      "text": "Looking for help? Admirable. But the real help would have been not starting this game in the first place.",
+      "pause": false
+    },
+    {
+      "id": "multiple_errors",
+      "event": "many_failures",
+      "condition": "frustrated",
+      "show_once": false,
+      "text": "Error after error. Maybe the real error was starting this journey. (Too philosophical? Sorry, I've been watching you struggle.)",
+      "pause": false
+    }
+  ]
+}
