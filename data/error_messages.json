@@ -1,0 +1,298 @@
+{
+  "error_categories": {
+    "locked_setting": {
+      "messages": [
+        "Cannot modify {setting}: Prerequisite {dependency} not satisfied",
+        "{setting} is locked. Check {category} configuration first",
+        "Access denied: {setting} requires {dependency} to be in {state} state",
+        "Circular dependency detected when enabling {setting}",
+        "Configuration conflict: {setting} is incompatible with current state",
+        "Unable to enable {setting}: Dependencies not met",
+        "{setting} requires {dependency} to be configured",
+        "Prerequisite chain incomplete for {setting}",
+        "Cannot unlock {setting} until {dependency} is resolved",
+        "Dependency validation failed for {setting}",
+        "{setting} is gated by {dependency} settings",
+        "Insufficient permissions to modify {setting}",
+        "State transition blocked for {setting}",
+        "{setting} requires system-level prerequisites",
+        "Cannot proceed: {setting} has unmet requirements"
+      ],
+      "hints": [
+        "Try enabling {dependency} first",
+        "Check the {category} menu for related settings",
+        "This setting may require multiple prerequisites",
+        "Look for settings with similar names",
+        "Some settings must be enabled in a specific order",
+        "Try navigating to related menus",
+        "Check if other settings need to be configured",
+        "Review the dependency chain for this setting"
+      ]
+    },
+    "invalid_value": {
+      "messages": [
+        "Value {value} exceeds maximum allowable threshold",
+        "{value} conflicts with {related_setting} configuration",
+        "Cannot set {setting} to {value}: Out of acceptable range",
+        "Value {value} would cause system instability",
+        "Rejected: {value} is not a valid configuration",
+        "Invalid input for {setting}: {value}",
+        "Value {value} incompatible with current state",
+        "{setting} does not accept {value} in this mode",
+        "Range violation: {value} is outside bounds",
+        "Type mismatch for {setting} value",
+        "{value} would exceed resource limits",
+        "Value {value} conflicts with security policy",
+        "Cannot apply {value}: Validation failed",
+        "Unacceptable value for {setting}: {value}",
+        "{value} violates configuration constraints"
+      ],
+      "hints": [
+        "Try a value between {min} and {max}",
+        "Check {related_setting} for constraints",
+        "This setting may have hidden limits",
+        "Some values are only valid in certain modes",
+        "Review the acceptable range for this setting",
+        "Try a different value closer to the default",
+        "Check for conflicts with other settings"
+      ]
+    },
+    "fake_system_error": {
+      "messages": [
+        "CRITICAL: {setting} modification triggered failsafe",
+        "System integrity check failed after enabling {setting}",
+        "Configuration database corruption detected",
+        "Unable to persist changes: Write error 0x{code}",
+        "Fatal: {setting} caused recursive dependency loop",
+        "Kernel panic prevented: {setting} configuration unsafe",
+        "Memory allocation failure during {setting} update",
+        "Stack overflow detected in dependency resolver",
+        "Segmentation fault in configuration subsystem",
+        "Unhandled exception: {setting} caused null pointer",
+        "Buffer overflow prevented in settings parser",
+        "Assertion failed: {setting} state inconsistent",
+        "Watchdog timeout: {setting} took too long to apply",
+        "Hardware incompatibility detected for {setting}",
+        "Firmware verification failed after {setting} change"
+      ],
+      "hints": [
+        "Try restarting the configuration process",
+        "This might be a temporary system issue",
+        "Check system logs for more details",
+        "Contact administrator if problem persists",
+        "System may need to be reinitialized",
+        "Try clearing the configuration cache",
+        "Some changes may require a system restart"
+      ],
+      "fake_hint": true
+    },
+    "misleading_success": {
+      "messages": [
+        "{setting} enabled successfully (verification pending)",
+        "Change applied. Restart required to take effect",
+        "{setting} configured. Synchronizing with other settings...",
+        "Setting saved. Background validation in progress",
+        "Applied. Note: Some features may not activate immediately",
+        "{setting} updated. Changes will propagate shortly",
+        "Modification queued for {setting}",
+        "{setting} staged for next configuration cycle",
+        "Preliminary approval granted for {setting}",
+        "Change registered. Awaiting system confirmation",
+        "{setting} accepted pending final validation",
+        "Configuration submitted for {setting}",
+        "Update scheduled for {setting}",
+        "{setting} modification in progress",
+        "Change to {setting} will take effect momentarily"
+      ],
+      "actually_failed": true
+    },
+    "dependency_conflict": {
+      "messages": [
+        "Enabling {setting} would disable {conflicting_setting}",
+        "Mutual exclusion violation between {setting} and {conflicting_setting}",
+        "{setting} and {conflicting_setting} cannot both be enabled",
+        "Configuration conflict: Choose either {setting} or {conflicting_setting}",
+        "Incompatible settings detected",
+        "{setting} requires {conflicting_setting} to be disabled",
+        "Cannot enable {setting}: Conflicts with active configuration",
+        "Exclusive lock held by {conflicting_setting}",
+        "{setting} is incompatible with current profile",
+        "Resource conflict between {setting} and {conflicting_setting}"
+      ],
+      "hints": [
+        "Try disabling {conflicting_setting} first",
+        "Only one of these settings can be active",
+        "Check which settings are mutually exclusive",
+        "Some features cannot be used together"
+      ]
+    },
+    "value_dependency": {
+      "messages": [
+        "{setting} requires {dependency} to be at least {threshold}",
+        "Cannot set {setting} while {dependency} is below {threshold}",
+        "Value constraint violation: {dependency} must exceed {threshold}",
+        "{setting} needs higher {dependency} value",
+        "Threshold not met: {dependency} = {current_value}, required >= {threshold}",
+        "{setting} unavailable until {dependency} reaches {threshold}",
+        "Insufficient {dependency} level for {setting}",
+        "{dependency} must be increased before enabling {setting}",
+        "Cannot proceed: {dependency} value too low",
+        "{setting} requires {dependency} in range [{min}, {max}]"
+      ],
+      "hints": [
+        "Increase {dependency} to at least {threshold}",
+        "Check the current value of {dependency}",
+        "Some settings require specific value ranges",
+        "Try adjusting {dependency} first"
+      ]
+    },
+    "permission_denied": {
+      "messages": [
+        "Insufficient privileges to modify {setting}",
+        "Administrator access required for {setting}",
+        "Permission denied: {setting} is protected",
+        "{setting} requires elevated credentials",
+        "Access level insufficient for {setting}",
+        "Cannot modify protected setting {setting}",
+        "Security policy prevents changes to {setting}",
+        "{setting} is read-only in current mode",
+        "Operation not permitted for {setting}",
+        "Restricted setting: {setting} cannot be modified"
+      ],
+      "hints": [
+        "This setting may require administrator access",
+        "Check your permission level",
+        "Some settings are protected by policy",
+        "Try running with elevated privileges"
+      ]
+    },
+    "state_transition": {
+      "messages": [
+        "Invalid state transition for {setting}",
+        "Cannot change {setting} from {old_state} to {new_state}",
+        "{setting} is in an inconsistent state",
+        "State machine error for {setting}",
+        "Transition blocked: {setting} cannot move to {new_state}",
+        "{setting} must be in {required_state} state first",
+        "Illegal state change attempted for {setting}",
+        "{setting} state locked during operation",
+        "Cannot modify {setting} in current state",
+        "State transition requires intermediate steps"
+      ],
+      "hints": [
+        "Try resetting {setting} to default first",
+        "Some transitions require intermediate states",
+        "Check the current state of {setting}",
+        "State changes may need to follow a sequence"
+      ]
+    }
+  },
+  "context_sensitive_errors": [
+    {
+      "condition": "too_many_attempts",
+      "threshold": 5,
+      "message": "Maximum retry limit exceeded. Cooling down...",
+      "hint": "Wait a moment before trying again",
+      "fake": true
+    },
+    {
+      "condition": "rapid_changes",
+      "threshold": 10,
+      "message": "Change rate exceeded. Please slow down.",
+      "hint": "System needs time to process each change",
+      "fake": true
+    },
+    {
+      "condition": "after_glitch",
+      "message": "Settings corrupted. Attempting auto-recovery...",
+      "hint": "This may take a few moments",
+      "fake": true,
+      "show_fake_progress": true
+    },
+    {
+      "condition": "circular_dependency_detected",
+      "message": "Circular dependency detected: Cannot resolve {setting}",
+      "hint": "Try enabling settings in a different order",
+      "fake": false
+    },
+    {
+      "condition": "dependency_chain_too_long",
+      "threshold": 10,
+      "message": "Dependency chain exceeds maximum depth",
+      "hint": "Some settings may need to be enabled manually",
+      "fake": false
+    },
+    {
+      "condition": "resource_exhausted",
+      "message": "System resources exhausted. Cannot apply more settings.",
+      "hint": "Try disabling some settings first",
+      "fake": true
+    },
+    {
+      "condition": "configuration_timeout",
+      "timeout": 30,
+      "message": "Configuration operation timed out",
+      "hint": "The system may be under heavy load",
+      "fake": true
+    },
+    {
+      "condition": "validation_in_progress",
+      "message": "Previous change still being validated",
+      "hint": "Wait for current operation to complete",
+      "fake": true
+    },
+    {
+      "condition": "quantum_decoherence",
+      "message": "Quantum state collapsed during measurement",
+      "hint": "Try again without observing the setting",
+      "fake": true,
+      "applies_to": ["quantum_settings"]
+    },
+    {
+      "condition": "meta_paradox",
+      "message": "Self-referential configuration detected",
+      "hint": "The settings are thinking about themselves",
+      "fake": true,
+      "applies_to": ["meta_settings"]
+    }
+  ],
+  "error_codes": {
+    "E001": "Dependency not satisfied",
+    "E002": "Invalid value",
+    "E003": "Permission denied",
+    "E004": "State transition error",
+    "E005": "Configuration conflict",
+    "E006": "Value dependency not met",
+    "E007": "Circular dependency",
+    "E008": "Resource limit exceeded",
+    "E009": "Timeout",
+    "E010": "System error",
+    "E042": "Meaning of life incompatible with current configuration",
+    "E404": "Setting not found",
+    "E500": "Internal configuration error",
+    "E503": "Configuration service unavailable"
+  },
+  "severity_levels": {
+    "info": {
+      "prefix": "INFO:",
+      "color": "blue"
+    },
+    "warning": {
+      "prefix": "WARNING:",
+      "color": "yellow"
+    },
+    "error": {
+      "prefix": "ERROR:",
+      "color": "red"
+    },
+    "critical": {
+      "prefix": "CRITICAL:",
+      "color": "bright_red"
+    },
+    "fake_critical": {
+      "prefix": "CRITICAL:",
+      "color": "bright_red",
+      "actually_harmless": true
+    }
+  }
+}

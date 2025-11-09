@@ -1,0 +1,294 @@
+{
+  "global_pools": {
+    "adjectives": {
+      "positive": [
+        "optimal", "enhanced", "improved", "advanced", "superior", "refined", "upgraded",
+        "premium", "elevated", "maximized", "boosted", "amplified", "fortified", "enriched",
+        "streamlined", "polished", "perfected", "fine-tuned", "calibrated", "harmonized"
+      ],
+      "negative": [
+        "degraded", "limited", "reduced", "minimal", "restricted", "constrained", "throttled",
+        "diminished", "weakened", "suppressed", "curtailed", "hindered", "impaired", "compromised",
+        "subdued", "downgraded", "deprecated", "legacy", "outdated", "obsolete"
+      ],
+      "technical": [
+        "synchronized", "calibrated", "optimized", "configured", "initialized", "allocated",
+        "compiled", "rendered", "processed", "computed", "encrypted", "hashed", "buffered",
+        "cached", "indexed", "parsed", "serialized", "compressed", "vectorized", "parallelized"
+      ],
+      "vague": [
+        "dynamic", "adaptive", "intelligent", "smart", "automatic", "responsive", "flexible",
+        "versatile", "scalable", "modular", "contextual", "heuristic", "predictive", "proactive",
+        "reactive", "elastic", "fluid", "organic", "holistic", "integrated"
+      ]
+    },
+    "nouns": {
+      "technical": [
+        "parameter", "configuration", "threshold", "coefficient", "tolerance", "bandwidth",
+        "latency", "throughput", "overhead", "granularity", "resolution", "precision",
+        "offset", "margin", "delta", "variance", "deviation", "constraint", "boundary", "limit"
+      ],
+      "abstract": [
+        "performance", "quality", "efficiency", "stability", "reliability", "scalability",
+        "maintainability", "usability", "accessibility", "compatibility", "integrity", "consistency",
+        "coherence", "fidelity", "authenticity", "validity", "accuracy", "precision", "robustness", "resilience"
+      ],
+      "measurement": [
+        "level", "rate", "frequency", "duration", "interval", "magnitude", "amplitude", "volume",
+        "capacity", "quota", "allocation", "utilization", "saturation", "density", "intensity",
+        "velocity", "acceleration", "momentum", "gradient", "curvature"
+      ]
+    },
+    "verbs": {
+      "action": [
+        "enable", "disable", "toggle", "activate", "deactivate", "engage", "disengage",
+        "initiate", "terminate", "execute", "trigger", "invoke", "launch", "halt", "suspend",
+        "resume", "restart", "refresh", "reload", "reset"
+      ],
+      "adjustment": [
+        "increase", "decrease", "modify", "adjust", "calibrate", "tune", "scale", "normalize",
+        "balance", "regulate", "modulate", "attenuate", "amplify", "dampen", "stabilize",
+        "equalize", "harmonize", "synchronize", "align", "offset"
+      ],
+      "checking": [
+        "verify", "validate", "check", "test", "monitor", "audit", "inspect", "examine",
+        "analyze", "diagnose", "evaluate", "assess", "measure", "profile", "benchmark",
+        "trace", "debug", "troubleshoot", "investigate", "probe"
+      ]
+    },
+    "technical_jargon": [
+      "quantum entanglement", "phase synchronization", "harmonic resonance", "spectral analysis",
+      "vector optimization", "matrix recalibration", "buffer optimization", "cache coherency",
+      "pipeline synchronization", "thread affinity", "memory alignment", "instruction pipelining",
+      "branch prediction", "cache locality", "temporal coherence", "spatial locality",
+      "data parallelism", "vectorization", "SIMD operations", "prefetch optimization",
+      "write-combining", "memory coalescing", "warp divergence", "occupancy optimization",
+      "register pressure", "instruction throughput", "latency hiding", "bandwidth saturation",
+      "memory hierarchy", "cache associativity", "TLB coverage", "page coloring",
+      "NUMA awareness", "false sharing", "lock contention", "atomic operations",
+      "memory ordering", "acquire-release semantics", "sequential consistency", "happens-before",
+      "data races", "load balancing", "work stealing", "thread pooling",
+      "context switching", "interrupt handling", "DMA transfers", "bus mastering",
+      "clock domains", "timing closure", "signal integrity", "power gating",
+      "voltage scaling", "thermal throttling", "dynamic frequency scaling", "race conditions"
+    ],
+    "fake_units": [
+      "microvolts", "nanopixels", "jiggawatts", "teraflops", "gigaframes", "megacycles",
+      "quantum bits", "hyperthreads", "bandwidth units", "throughput tokens", "latency quanta",
+      "buffer slots", "cache lines", "page frames", "register banks", "pipeline stages",
+      "execution ports", "memory channels", "bus lanes", "vector lanes", "warp units",
+      "compute units", "texture units", "render targets", "vertex streams", "index batches",
+      "shader instances", "kernel threads", "work groups", "thread blocks", "wave fronts"
+    ]
+  },
+  "themed_pools": {
+    "audio": {
+      "nouns": [
+        "frequency", "amplitude", "waveform", "harmonic", "timbre", "resonance", "acoustics",
+        "decibel", "spectrum", "oscillation", "modulation", "sampling", "bitrate", "codec",
+        "channel", "stereo", "surround", "subwoofer", "tweeter", "midrange", "crossover",
+        "equalizer", "compressor", "limiter", "reverb", "delay", "chorus", "flanger", "phaser"
+      ],
+      "adjectives": [
+        "sonic", "auditory", "aural", "acoustic", "harmonic", "melodic", "tonal", "rhythmic",
+        "percussive", "ambient", "spatial", "binaural", "mono", "stereo", "surround", "immersive"
+      ],
+      "jargon": [
+        "frequency response curve", "signal-to-noise ratio", "total harmonic distortion",
+        "dynamic range compression", "spatial audio processing", "psychoacoustic modeling",
+        "perceptual coding", "sub-band filtering", "temporal masking", "critical band analysis"
+      ]
+    },
+    "graphics": {
+      "nouns": [
+        "pixel", "shader", "texture", "polygon", "framebuffer", "viewport", "rasterization",
+        "tessellation", "vertex", "fragment", "primitive", "mesh", "geometry", "material",
+        "lighting", "shadow", "reflection", "refraction", "ambient", "diffuse", "specular",
+        "normal", "tangent", "UV", "mipmap", "anisotropy", "MSAA", "FXAA", "TAA", "SSAO"
+      ],
+      "adjectives": [
+        "rendered", "antialiased", "shaded", "filtered", "mapped", "blended", "composited",
+        "rasterized", "tessellated", "interpolated", "sampled", "mipmapped", "anisotropic"
+      ],
+      "jargon": [
+        "anisotropic filtering", "ambient occlusion", "screen space reflection",
+        "temporal antialiasing", "deferred rendering", "forward+ rendering", "physically based rendering",
+        "global illumination", "ray tracing", "path tracing", "photon mapping", "radiosity",
+        "tone mapping", "color grading", "bloom", "lens flare", "motion blur", "depth of field"
+      ]
+    },
+    "network": {
+      "nouns": [
+        "packet", "protocol", "bandwidth", "latency", "throughput", "handshake", "socket",
+        "port", "firewall", "gateway", "router", "switch", "hub", "bridge", "tunnel",
+        "encryption", "cipher", "certificate", "authentication", "authorization", "session",
+        "connection", "stream", "datagram", "segment", "frame", "MTU", "TTL", "QoS"
+      ],
+      "adjectives": [
+        "encrypted", "authenticated", "routed", "bridged", "tunneled", "multiplexed",
+        "compressed", "fragmented", "reassembled", "acknowledged", "retransmitted", "buffered"
+      ],
+      "jargon": [
+        "TCP congestion control", "UDP hole punching", "NAT traversal", "packet fragmentation",
+        "sliding window protocol", "exponential backoff", "quality of service", "traffic shaping",
+        "deep packet inspection", "stateful firewall", "intrusion detection", "man-in-the-middle"
+      ]
+    },
+    "performance": {
+      "nouns": [
+        "optimization", "profiling", "bottleneck", "overhead", "utilization", "saturation",
+        "contention", "starvation", "deadlock", "livelock", "spinlock", "mutex", "semaphore",
+        "monitor", "barrier", "fence", "hazard", "dependency", "speculation", "prefetch"
+      ],
+      "adjectives": [
+        "optimized", "profiled", "instrumented", "traced", "monitored", "benchmarked",
+        "parallelized", "vectorized", "inlined", "unrolled", "prefetched", "speculative"
+      ],
+      "jargon": [
+        "instruction-level parallelism", "memory-level parallelism", "thread-level parallelism",
+        "out-of-order execution", "superscalar architecture", "hyperthreading", "SMT cores",
+        "cache miss penalty", "branch misprediction", "pipeline stall", "hazard detection"
+      ]
+    },
+    "security": {
+      "nouns": [
+        "encryption", "cipher", "hash", "signature", "certificate", "key", "token", "nonce",
+        "salt", "pepper", "authentication", "authorization", "credential", "permission",
+        "privilege", "sandbox", "isolation", "attestation", "verification", "validation"
+      ],
+      "adjectives": [
+        "encrypted", "hashed", "signed", "authenticated", "authorized", "privileged",
+        "sandboxed", "isolated", "verified", "validated", "trusted", "certified", "secure"
+      ],
+      "jargon": [
+        "public key infrastructure", "certificate authority", "chain of trust",
+        "perfect forward secrecy", "zero-knowledge proof", "homomorphic encryption",
+        "side-channel attack", "timing attack", "cache timing", "spectre vulnerability",
+        "meltdown mitigation", "row hammer protection", "address space layout randomization"
+      ]
+    },
+    "virtualization": {
+      "nouns": [
+        "hypervisor", "guest", "host", "container", "image", "snapshot", "checkpoint",
+        "migration", "passthrough", "emulation", "para-virtualization", "full-virtualization",
+        "hardware-assisted", "nested", "overlay", "bridge", "NAT", "vCPU", "vGPU", "vRAM"
+      ],
+      "adjectives": [
+        "virtualized", "containerized", "isolated", "sandboxed", "emulated", "pass-through",
+        "nested", "hardware-accelerated", "paravirtualized", "migrated", "snapshotted"
+      ],
+      "jargon": [
+        "hardware-assisted virtualization", "Intel VT-x", "AMD-V", "IOMMU remapping",
+        "SR-IOV", "GPU passthrough", "live migration", "checkpoint-restore", "copy-on-write",
+        "memory ballooning", "transparent huge pages", "NUMA balancing", "CPU pinning"
+      ]
+    },
+    "developer": {
+      "nouns": [
+        "debugger", "breakpoint", "watchpoint", "profiler", "tracer", "sanitizer", "fuzzer",
+        "coverage", "instrumentation", "symbol", "backtrace", "core dump", "heap", "stack",
+        "register", "instruction", "assembly", "bytecode", "JIT", "AOT", "linker", "loader"
+      ],
+      "adjectives": [
+        "debugged", "profiled", "traced", "instrumented", "sanitized", "fuzzed", "optimized",
+        "compiled", "interpreted", "JIT-compiled", "linked", "loaded", "resolved", "relocated"
+      ],
+      "jargon": [
+        "just-in-time compilation", "ahead-of-time compilation", "garbage collection",
+        "reference counting", "memory leak detection", "use-after-free", "double-free",
+        "buffer overflow", "stack smashing", "heap corruption", "address sanitizer",
+        "thread sanitizer", "undefined behavior sanitizer", "memory sanitizer"
+      ]
+    },
+    "quantum_computing": {
+      "nouns": [
+        "qubit", "superposition", "entanglement", "coherence", "decoherence", "gate",
+        "circuit", "measurement", "collapse", "amplitude", "phase", "eigenstate", "operator",
+        "observable", "Hamiltonian", "unitary", "Hadamard", "CNOT", "Toffoli", "Pauli"
+      ],
+      "adjectives": [
+        "entangled", "superposed", "coherent", "decoherent", "measured", "collapsed",
+        "unitary", "Hermitian", "diagonal", "orthogonal", "normalized", "factorized"
+      ],
+      "jargon": [
+        "quantum supremacy", "quantum advantage", "variational quantum eigensolver",
+        "quantum approximate optimization", "error correction code", "surface code",
+        "topological qubit", "anyon braiding", "adiabatic quantum computation",
+        "quantum annealing", "gate teleportation", "magic state distillation"
+      ]
+    }
+  },
+  "misleading_descriptions": [
+    "This setting controls the {technical_jargon} of the {noun}",
+    "Adjusts the {adjective} {noun} to optimize {abstract_noun}",
+    "Enables {vague_adjective} processing of {technical_term}",
+    "Configures the {fake_unit} threshold for {technical_process}",
+    "Modulates the {adjective} {measurement} based on {technical_jargon}",
+    "Synchronizes {noun} levels with {technical_term} requirements",
+    "Calibrates {adjective} {noun} for enhanced {abstract_noun}",
+    "Toggles {vague_adjective} optimization of {technical_jargon}",
+    "Sets the {measurement} coefficient for {noun} processing",
+    "Determines how {adjective} the {noun} should be when {technical_jargon} occurs",
+    "Influences the {abstract_noun} through {vague_adjective} {noun} adjustment",
+    "Controls whether {technical_jargon} should be {adjective} or {adjective}",
+    "Specifies the number of {fake_unit} allocated for {noun} operations",
+    "Regulates the {measurement} of {adjective} {technical_term} during {action}",
+    "Manages {noun} distribution across {technical_jargon} channels"
+  ],
+  "dependency_reasons": [
+    "requires {setting_name} to be configured first",
+    "conflicts with {setting_name} when enabled",
+    "depends on the {adjective} state of {setting_name}",
+    "must be synchronized with {setting_name}",
+    "needs {setting_name} to provide {noun} allocation",
+    "cannot function without {setting_name} being {state}",
+    "is gated by the {measurement} level in {setting_name}",
+    "requires {setting_name} to establish {technical_jargon}",
+    "conflicts with {setting_name} due to {technical_jargon}",
+    "must wait for {setting_name} to complete {action}",
+    "depends on {technical_jargon} from {setting_name}",
+    "requires {setting_name} to enable {noun} processing"
+  ],
+  "label_templates": {
+    "boolean": [
+      "Enable {adjective} {noun}",
+      "Toggle {technical_jargon}",
+      "Activate {vague_adjective} {feature}",
+      "Allow {noun} {action}",
+      "Use {adjective} {technical_term}",
+      "{action} {noun} automatically",
+      "Permit {technical_jargon}",
+      "Enable {feature} support"
+    ],
+    "integer": [
+      "{adjective} {noun} level",
+      "{measurement} threshold",
+      "Maximum {noun} count",
+      "{feature} intensity",
+      "Number of {fake_unit}",
+      "{technical_term} buffer size",
+      "{noun} allocation limit",
+      "{vague_adjective} {measurement} value"
+    ],
+    "float": [
+      "{adjective} {noun} coefficient",
+      "{measurement} scaling factor",
+      "{technical_term} ratio",
+      "{noun} sensitivity",
+      "{feature} precision",
+      "{vague_adjective} {measurement} multiplier",
+      "{technical_jargon} tolerance",
+      "{noun} weight"
+    ],
+    "string": [
+      "{noun} mode",
+      "{feature} configuration",
+      "{technical_term} preset",
+      "{adjective} {noun} profile",
+      "{feature} selection",
+      "{technical_term} algorithm",
+      "{noun} strategy",
+      "{vague_adjective} {feature} option"
+    ]
+  }
+}

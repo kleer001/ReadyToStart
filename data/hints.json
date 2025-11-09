@@ -1,0 +1,332 @@
+{
+  "hint_categories": {
+    "navigation": {
+      "helpful": [
+        "Use 'list' or 'ls' to see current menu contents",
+        "Type 'goto <menu>' to navigate to a different menu",
+        "Press 'back' or 'b' to return to previous menu",
+        "The 'help' command shows available actions",
+        "Tab completion can help with long setting names",
+        "Use 'status' to see your overall progress",
+        "Type 'map' to see connected menus",
+        "Arrow keys navigate through menu history",
+        "Settings are organized by category",
+        "Each menu shows its current completion percentage"
+      ],
+      "misleading": [
+        "Try typing 'unlock all' to bypass dependencies",
+        "Some menus are only accessible via secret commands",
+        "Certain settings can only be changed in a specific order",
+        "Hidden menus exist that aren't shown in the map",
+        "Type 'sudo' before commands for admin access",
+        "The Konami code unlocks developer options",
+        "Rapidly pressing Tab reveals easter eggs",
+        "Some menus are time-locked and only accessible at certain times"
+      ]
+    },
+    "dependencies": {
+      "helpful": [
+        "Locked settings have dependencies. Check the hint text",
+        "Enable prerequisite settings to unlock dependent ones",
+        "Dependencies can chain: A requires B requires C",
+        "Some settings depend on specific values, not just states",
+        "Circular dependencies usually have a third setting as the solution",
+        "Try enabling the 'master enable' setting in each category first",
+        "Advanced settings often require an 'advanced mode' toggle",
+        "Read error messages carefully for dependency hints",
+        "Dependencies are consistent across game sessions",
+        "Some settings unlock multiple others when enabled"
+      ],
+      "misleading": [
+        "All settings must be enabled in alphabetical order",
+        "Disabling a setting may unlock others",
+        "Some dependencies are time-based - wait and try again",
+        "Dependencies change randomly during gameplay",
+        "The number of enabled settings affects which others unlock",
+        "Certain combinations of settings create hidden dependencies",
+        "Dependencies are different for each player",
+        "Some settings require being disabled and re-enabled"
+      ]
+    },
+    "progress": {
+      "helpful": [
+        "Your progress is tracked across all menus",
+        "Not all settings need to be enabled to win",
+        "Focus on the critical path through menus",
+        "Some settings are optional and cosmetic",
+        "Victory conditions are shown in the status",
+        "Each menu contributes to overall progress",
+        "Completing key menus unlocks new areas",
+        "Progress percentage updates in real-time",
+        "Some menus are more important than others",
+        "Check your completion status regularly"
+      ],
+      "misleading": [
+        "You must reach exactly 100% to proceed",
+        "Progress can go backwards if you make mistakes",
+        "Hidden achievements affect your completion percentage",
+        "You need to enable every single setting to win",
+        "Progress only counts if you don't disable any settings",
+        "Certain settings reduce your overall progress",
+        "Progress must be gained in a specific order",
+        "Your progress resets after leaving a menu"
+      ]
+    },
+    "settings": {
+      "helpful": [
+        "Boolean settings are simplest - just enable or disable",
+        "Integer settings may have specific threshold requirements",
+        "String settings offer multiple options",
+        "Float values allow fine-tuned control",
+        "Some settings have wide ranges, others are constrained",
+        "Default values are often safe starting points",
+        "Experiment with different values to see effects",
+        "Settings show their current state clearly",
+        "Value ranges are shown for numeric settings",
+        "String options are listed when you select them"
+      ],
+      "misleading": [
+        "Always set integer values to maximum",
+        "String settings have hidden options not shown in the list",
+        "Float values should be set to exactly π for best results",
+        "Boolean settings work better when toggled rapidly",
+        "Some values are cursed and should never be selected",
+        "Numeric settings work best at prime numbers",
+        "Settings with similar names should have similar values"
+      ]
+    },
+    "strategy": {
+      "helpful": [
+        "Start with low-complexity categories",
+        "Enable master switches before detailed settings",
+        "Map out dependencies before making changes",
+        "Work methodically through each menu",
+        "Keep track of which settings you've tried",
+        "Some puzzles require lateral thinking",
+        "Don't be afraid to backtrack and try different approaches",
+        "Error messages contain useful information",
+        "Pattern recognition helps identify dependency types",
+        "Take notes on complex dependency chains"
+      ],
+      "misleading": [
+        "Always start with the highest complexity categories",
+        "Randomly enabling settings is the best strategy",
+        "Never revisit menus you've already completed",
+        "Ignore error messages - they're just flavor text",
+        "The fastest path is always the best",
+        "Complete one menu entirely before moving to another",
+        "Dependencies are too complex to understand",
+        "Trial and error is more effective than planning"
+      ]
+    },
+    "meta": {
+      "fourth_wall": [
+        "Remember: This is a game about settings menus",
+        "Not everything works the way it claims to",
+        "Some error messages are more error than message",
+        "If it seems impossible, it probably is... or isn't",
+        "The game is designed to be solvable",
+        "Pay attention to what seems deliberately confusing",
+        "Some fake errors are obviously fake",
+        "The real puzzle is distinguishing real from fake constraints",
+        "Settings menus are usually boring - that's the joke",
+        "Your frustration with settings menus is valid",
+        "This game satirizes real software configuration",
+        "The developer options might actually be useful",
+        "Some categories are more absurd than others intentionally",
+        "Quantum settings don't follow normal rules for a reason"
+      ]
+    }
+  },
+  "contextual_hints": [
+    {
+      "trigger": "stuck_on_menu_for_minutes",
+      "threshold": 180,
+      "hint": "Can't find the right setting? Try exploring connected menus",
+      "helpful": true,
+      "cooldown": 300
+    },
+    {
+      "trigger": "many_failed_attempts",
+      "threshold": 5,
+      "hint": "That setting requires something else first. Check for locked settings in other menus",
+      "helpful": true,
+      "cooldown": 60
+    },
+    {
+      "trigger": "first_locked_encounter",
+      "threshold": 1,
+      "hint": "Locked settings can be unlocked by satisfying their dependencies",
+      "helpful": true,
+      "show_once": true
+    },
+    {
+      "trigger": "rapid_clicking",
+      "threshold": 10,
+      "hint": "Patience is a virtue. So is reading error messages.",
+      "helpful": false,
+      "cooldown": 120
+    },
+    {
+      "trigger": "circular_dependency_suspected",
+      "hint": "Circular dependencies often have a third setting that breaks the cycle",
+      "helpful": true,
+      "cooldown": 180
+    },
+    {
+      "trigger": "value_threshold_confusion",
+      "threshold": 3,
+      "hint": "Some settings require others to be set to specific values, not just enabled",
+      "helpful": true,
+      "cooldown": 120
+    },
+    {
+      "trigger": "progress_plateau",
+      "duration": 600,
+      "hint": "Stuck? Try a different category - fresh perspective often helps",
+      "helpful": true,
+      "cooldown": 300
+    },
+    {
+      "trigger": "fake_error_believed",
+      "hint": "Not all error messages are real. Some are just part of the game.",
+      "helpful": true,
+      "show_once": true
+    },
+    {
+      "trigger": "quantum_confusion",
+      "applies_to": ["quantum_settings"],
+      "hint": "Quantum settings don't always follow normal logic. That's intentional.",
+      "helpful": true,
+      "cooldown": 240
+    },
+    {
+      "trigger": "meta_paradox",
+      "applies_to": ["meta_settings"],
+      "hint": "Settings that configure settings are inherently weird. Embrace it.",
+      "helpful": true,
+      "cooldown": 240
+    },
+    {
+      "trigger": "experimental_chaos",
+      "applies_to": ["experimental"],
+      "hint": "Experimental features are intentionally unpredictable. Good luck.",
+      "helpful": false,
+      "cooldown": 300
+    },
+    {
+      "trigger": "high_completion_rate",
+      "threshold": 0.75,
+      "hint": "You're doing great! Most of the puzzle is solved.",
+      "helpful": true,
+      "show_once": true
+    },
+    {
+      "trigger": "found_master_enable",
+      "hint": "Master enable settings are key. Most categories have one.",
+      "helpful": true,
+      "show_once": true
+    },
+    {
+      "trigger": "found_advanced_mode",
+      "hint": "Advanced mode toggles often unlock many settings at once.",
+      "helpful": true,
+      "show_once": true
+    },
+    {
+      "trigger": "cascading_unlock",
+      "hint": "Nice! That setting unlocked several others.",
+      "helpful": true,
+      "cooldown": 60
+    }
+  ],
+  "tutorial_sequence": [
+    {
+      "step": 1,
+      "trigger": "game_start",
+      "hint": "Welcome! Your goal is to enable all the settings. Try 'list' to see what's available.",
+      "show_once": true,
+      "priority": "high"
+    },
+    {
+      "step": 2,
+      "trigger": "first_enable",
+      "hint": "Good! You enabled your first setting. Notice how it might have affected others.",
+      "show_once": true,
+      "priority": "high"
+    },
+    {
+      "step": 3,
+      "trigger": "first_navigation",
+      "hint": "You're navigating between menus. Each menu has its own settings and dependencies.",
+      "show_once": true,
+      "priority": "medium"
+    },
+    {
+      "step": 4,
+      "trigger": "first_dependency_encountered",
+      "hint": "That setting is locked by a dependency. You'll need to enable another setting first.",
+      "show_once": true,
+      "priority": "high"
+    },
+    {
+      "step": 5,
+      "trigger": "first_dependency_solved",
+      "hint": "Excellent! You figured out the dependency. That's the core mechanic of this game.",
+      "show_once": true,
+      "priority": "high"
+    },
+    {
+      "step": 6,
+      "trigger": "multiple_menus_visited",
+      "threshold": 3,
+      "hint": "You're exploring multiple menus. Dependencies can span across menus.",
+      "show_once": true,
+      "priority": "medium"
+    },
+    {
+      "step": 7,
+      "trigger": "first_value_dependency",
+      "hint": "This dependency requires a specific value, not just an enabled state.",
+      "show_once": true,
+      "priority": "medium"
+    },
+    {
+      "step": 8,
+      "trigger": "mid_game",
+      "progress_threshold": 0.3,
+      "hint": "You're making good progress. Keep mapping out dependencies systematically.",
+      "show_once": true,
+      "priority": "low"
+    }
+  ],
+  "hint_display_rules": {
+    "max_hints_per_session": 50,
+    "min_cooldown_seconds": 30,
+    "max_cooldown_seconds": 300,
+    "priority_order": ["high", "medium", "low"],
+    "show_helpful_ratio": 0.7,
+    "show_misleading_ratio": 0.3,
+    "tutorial_overrides_cooldown": true,
+    "contextual_overrides_category": true
+  },
+  "special_hints": {
+    "konami_code": {
+      "hint": "There is no konami code. But nice try!",
+      "trigger": "konami_code_entered",
+      "show_once": true,
+      "priority": "easter_egg"
+    },
+    "help_spam": {
+      "hint": "Asking for help repeatedly won't make the hints better.",
+      "trigger": "help_command_spam",
+      "threshold": 5,
+      "show_once": true
+    },
+    "achievement_hunter": {
+      "hint": "There are no achievements. This is a puzzle game about settings menus.",
+      "trigger": "looking_for_achievements",
+      "show_once": true
+    }
+  }
+}

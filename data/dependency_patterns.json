@@ -1,0 +1,270 @@
+{
+  "patterns": [
+    {
+      "name": "master_enable",
+      "description": "Main enable setting that gates all others",
+      "structure": {
+        "master": {
+          "id_pattern": "{category}_enable",
+          "type": "boolean",
+          "state": "enabled"
+        },
+        "dependents": {
+          "pattern": "{category}_*",
+          "exclude": ["{category}_enable"],
+          "dependency_type": "simple",
+          "required_state": "enabled"
+        }
+      },
+      "applies_to": ["all_categories"],
+      "weight": 1.0
+    },
+    {
+      "name": "advanced_gate",
+      "description": "Advanced settings hidden behind toggle",
+      "structure": {
+        "gate": {
+          "id_pattern": "{category}_advanced_mode",
+          "type": "boolean",
+          "state": "enabled"
+        },
+        "dependents": {
+          "pattern": "{category}_advanced_*",
+          "dependency_type": "simple",
+          "required_state": "enabled"
+        }
+      },
+      "applies_to": ["all_categories"],
+      "weight": 0.8
+    },
+    {
+      "name": "value_threshold",
+      "description": "Setting B requires setting A to exceed threshold",
+      "structure": {
+        "prerequisite": {
+          "type": "integer",
+          "min_value": 50
+        },
+        "dependent": {
+          "dependency_type": "value",
+          "operator": ">",
+          "threshold": 50
+        }
+      },
+      "applies_to": ["high_complexity", "very_high_complexity"],
+      "weight": 0.6
+    },
+    {
+      "name": "mutual_exclusion",
+      "description": "Two settings that cannot both be enabled",
+      "structure": {
+        "setting_a": {
+          "type": "boolean"
+        },
+        "setting_b": {
+          "type": "boolean"
+        },
+        "constraint": "exactly_one_enabled"
+      },
+      "applies_to": ["all_categories"],
+      "weight": 0.3
+    },
+    {
+      "name": "chain_dependency",
+      "description": "A requires B, B requires C, C requires D",
+      "structure": {
+        "chain_length": [3, 5],
+        "pattern": "{category}_tier_{n}",
+        "each_depends_on": "previous"
+      },
+      "applies_to": ["very_high_complexity", "chaotic", "paradoxical", "recursive"],
+      "weight": 0.4
+    },
+    {
+      "name": "circular_hint",
+      "description": "Appears circular but has solution",
+      "structure": {
+        "setting_a": {
+          "id_pattern": "{category}_init"
+        },
+        "setting_b": {
+          "id_pattern": "{category}_verify"
+        },
+        "apparent_cycle": "a->b->a",
+        "actual_solution": "enable both simultaneously or find third setting"
+      },
+      "applies_to": ["experimental", "meta_settings", "quantum_settings"],
+      "weight": 0.2
+    },
+    {
+      "name": "sequential_unlock",
+      "description": "Settings must be enabled in sequence",
+      "structure": {
+        "sequence_length": [2, 4],
+        "pattern": "{category}_step_{n}",
+        "strict_order": true
+      },
+      "applies_to": ["medium_complexity", "high_complexity"],
+      "weight": 0.5
+    },
+    {
+      "name": "group_requirement",
+      "description": "Setting requires N others in group to be enabled",
+      "structure": {
+        "group_pattern": "{category}_group_*",
+        "required_count": 2,
+        "dependent_pattern": "{category}_unlock_*"
+      },
+      "applies_to": ["high_complexity", "very_high_complexity"],
+      "weight": 0.4
+    },
+    {
+      "name": "value_range_gate",
+      "description": "Setting unlocked only when another is in specific range",
+      "structure": {
+        "gate_setting": {
+          "type": "integer"
+        },
+        "dependent_setting": {
+          "dependency_type": "value_range",
+          "min_threshold": 30,
+          "max_threshold": 70
+        }
+      },
+      "applies_to": ["medium_complexity", "high_complexity"],
+      "weight": 0.35
+    },
+    {
+      "name": "inverse_dependency",
+      "description": "Setting requires another to be disabled",
+      "structure": {
+        "prerequisite": {
+          "type": "boolean",
+          "required_state": "disabled"
+        },
+        "dependent": {
+          "type": "boolean",
+          "dependency_type": "simple_inverse"
+        }
+      },
+      "applies_to": ["all_categories"],
+      "weight": 0.25
+    },
+    {
+      "name": "combo_requirement",
+      "description": "Setting requires specific combination of others",
+      "structure": {
+        "requirements": [
+          {
+            "setting": "A",
+            "state": "enabled"
+          },
+          {
+            "setting": "B",
+            "value": ">50"
+          },
+          {
+            "setting": "C",
+            "option": "mode_advanced"
+          }
+        ],
+        "all_must_match": true
+      },
+      "applies_to": ["very_high_complexity", "chaotic"],
+      "weight": 0.3
+    },
+    {
+      "name": "cascading_unlock",
+      "description": "Enabling one setting unlocks multiple others",
+      "structure": {
+        "trigger": {
+          "type": "boolean"
+        },
+        "unlocks": {
+          "count": [3, 7],
+          "pattern": "{category}_unlocked_*"
+        }
+      },
+      "applies_to": ["all_categories"],
+      "weight": 0.45
+    }
+  ],
+  "pattern_probabilities": {
+    "complexity_1": {
+      "master_enable": 0.9,
+      "advanced_gate": 0.2,
+      "sequential_unlock": 0.3,
+      "cascading_unlock": 0.3
+    },
+    "complexity_2": {
+      "master_enable": 0.95,
+      "advanced_gate": 0.4,
+      "sequential_unlock": 0.5,
+      "mutual_exclusion": 0.2,
+      "cascading_unlock": 0.4,
+      "inverse_dependency": 0.2
+    },
+    "complexity_3": {
+      "master_enable": 0.95,
+      "advanced_gate": 0.6,
+      "value_threshold": 0.3,
+      "sequential_unlock": 0.6,
+      "group_requirement": 0.3,
+      "value_range_gate": 0.3,
+      "mutual_exclusion": 0.3,
+      "inverse_dependency": 0.25
+    },
+    "complexity_4": {
+      "master_enable": 0.95,
+      "advanced_gate": 0.7,
+      "value_threshold": 0.5,
+      "chain_dependency": 0.3,
+      "sequential_unlock": 0.7,
+      "group_requirement": 0.5,
+      "value_range_gate": 0.4,
+      "combo_requirement": 0.2,
+      "mutual_exclusion": 0.4,
+      "cascading_unlock": 0.5
+    },
+    "complexity_5": {
+      "master_enable": 0.95,
+      "advanced_gate": 0.8,
+      "value_threshold": 0.7,
+      "chain_dependency": 0.5,
+      "circular_hint": 0.2,
+      "sequential_unlock": 0.8,
+      "group_requirement": 0.6,
+      "value_range_gate": 0.5,
+      "combo_requirement": 0.4,
+      "mutual_exclusion": 0.5,
+      "cascading_unlock": 0.6
+    }
+  },
+  "density_modifiers": {
+    "low": 0.5,
+    "medium": 1.0,
+    "high": 1.5,
+    "very_high": 2.0,
+    "chaotic": 2.5,
+    "paradoxical": 3.0,
+    "recursive": 3.5
+  },
+  "special_category_rules": {
+    "meta_settings": {
+      "always_include": ["circular_hint", "chain_dependency"],
+      "modifier": 1.5
+    },
+    "quantum_settings": {
+      "always_include": ["circular_hint"],
+      "modifier": 1.3
+    },
+    "experimental": {
+      "always_include": ["chaotic_dependencies"],
+      "modifier": 1.8
+    },
+    "developer": {
+      "always_include": ["combo_requirement", "group_requirement"],
+      "modifier": 1.4
+    }
+  }
+}
