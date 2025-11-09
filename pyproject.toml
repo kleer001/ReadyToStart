@@ -26,7 +26,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["src*"]
-exclude = ["tests*", "config*", "scripts*"]
+exclude = ["tests*", "config*", "scripts*", "docs*"]
 
 [tool.black]
 line-length = 88
