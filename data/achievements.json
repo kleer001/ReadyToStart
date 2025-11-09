@@ -1,0 +1,193 @@
+{
+  "achievements": [
+    {
+      "id": "first_setting",
+      "name": "Baby Steps",
+      "description": "Enable your first setting",
+      "condition": "settings_enabled",
+      "threshold": 1,
+      "rarity": "common",
+      "secret": false
+    },
+    {
+      "id": "ten_settings",
+      "name": "Getting the Hang of It",
+      "description": "Enable 10 settings",
+      "condition": "settings_enabled",
+      "threshold": 10,
+      "rarity": "common",
+      "secret": false
+    },
+    {
+      "id": "fifty_settings",
+      "name": "Configuration Enthusiast",
+      "description": "Enable 50 settings",
+      "condition": "settings_enabled",
+      "threshold": 50,
+      "rarity": "uncommon",
+      "secret": false
+    },
+    {
+      "id": "completionist",
+      "name": "Completionist",
+      "description": "Enable all settings in a layer",
+      "condition": "perfect_layer",
+      "threshold": 0,
+      "rarity": "uncommon",
+      "secret": false
+    },
+    {
+      "id": "time_waster",
+      "name": "Time is Relative",
+      "description": "Spend over 1 hour in the game",
+      "condition": "time_spent",
+      "threshold": 3600,
+      "rarity": "uncommon",
+      "secret": false
+    },
+    {
+      "id": "marathon_session",
+      "name": "Dedication or Obsession?",
+      "description": "Spend over 3 hours in the game",
+      "condition": "time_spent",
+      "threshold": 10800,
+      "rarity": "rare",
+      "secret": false
+    },
+    {
+      "id": "error_prone",
+      "name": "Trial and Error (Mostly Error)",
+      "description": "Make 50 errors",
+      "condition": "errors_made",
+      "threshold": 50,
+      "rarity": "common",
+      "secret": false
+    },
+    {
+      "id": "error_master",
+      "name": "Professional Mistake Maker",
+      "description": "Make 200 errors",
+      "condition": "errors_made",
+      "threshold": 200,
+      "rarity": "rare",
+      "secret": false
+    },
+    {
+      "id": "efficient",
+      "name": "Somehow Efficient",
+      "description": "Achieve 90%+ efficiency in a layer",
+      "condition": "efficiency_high",
+      "threshold": 90,
+      "rarity": "rare",
+      "secret": false
+    },
+    {
+      "id": "inefficient",
+      "name": "Spectacularly Inefficient",
+      "description": "Achieve less than 10% efficiency in a layer",
+      "condition": "efficiency_low",
+      "threshold": 10,
+      "rarity": "rare",
+      "secret": false
+    },
+    {
+      "id": "layer_5",
+      "name": "Going Deeper",
+      "description": "Complete 5 interface layers",
+      "condition": "layers_completed",
+      "threshold": 5,
+      "rarity": "uncommon",
+      "secret": false
+    },
+    {
+      "id": "layer_10",
+      "name": "Too Deep",
+      "description": "Complete 10 interface layers",
+      "condition": "layers_completed",
+      "threshold": 10,
+      "rarity": "rare",
+      "secret": false
+    },
+    {
+      "id": "quantum_discovered",
+      "name": "Quantum Leap",
+      "description": "Discover the quantum interface layer",
+      "condition": "found_quantum_layer",
+      "threshold": 0,
+      "rarity": "legendary",
+      "secret": true
+    },
+    {
+      "id": "secret_hunter",
+      "name": "Secret Hunter",
+      "description": "Find 5 secrets",
+      "condition": "secrets_found",
+      "threshold": 5,
+      "rarity": "rare",
+      "secret": false
+    },
+    {
+      "id": "secret_master",
+      "name": "Nothing is Hidden From You",
+      "description": "Find 10 secrets",
+      "condition": "secrets_found",
+      "threshold": 10,
+      "rarity": "legendary",
+      "secret": true
+    },
+    {
+      "id": "help_seeker",
+      "name": "RTFM",
+      "description": "View the help file 10 times",
+      "condition": "help_views",
+      "threshold": 10,
+      "rarity": "common",
+      "secret": false
+    },
+    {
+      "id": "help_addict",
+      "name": "Help Addiction",
+      "description": "View the help file 50 times",
+      "condition": "help_views",
+      "threshold": 50,
+      "rarity": "uncommon",
+      "secret": false
+    },
+    {
+      "id": "quit_attempts",
+      "name": "Commitment Issues",
+      "description": "Try to quit 5 times without actually quitting",
+      "condition": "quit_attempts",
+      "threshold": 5,
+      "rarity": "uncommon",
+      "secret": false
+    },
+    {
+      "id": "quit_addict",
+      "name": "Cannot Commit",
+      "description": "Try to quit 20 times but keep coming back",
+      "condition": "quit_attempts",
+      "threshold": 20,
+      "rarity": "rare",
+      "secret": false
+    },
+    {
+      "id": "final_layer",
+      "name": "The Truth",
+      "description": "Reach the final layer",
+      "condition": "reached_final_layer",
+      "threshold": 0,
+      "rarity": "legendary",
+      "secret": false
+    },
+    {
+      "id": "perfectionist",
+      "name": "Unreasonable Standards",
+      "description": "Complete every layer with zero errors",
+      "condition": "perfect_all_layers",
+      "threshold": 0,
+      "rarity": "legendary",
+      "secret": true
+    }
+  ]
+}

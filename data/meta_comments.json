@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "id": "time_spent_1",
+      "trigger": "time_spent_excessive",
+      "min_awareness": 0,
+      "show_once": true,
+      "text": "You've been at this for a while. It's just a settings menu. Or is it?"
+    },
+    {
+      "id": "circular_1",
+      "trigger": "circular_dependency_attempt",
+      "min_awareness": 1,
+      "show_once": false,
+      "text": "The dependency appears circular. But then again, so does this entire game."
+    },
+    {
+      "id": "fake_progress_1",
+      "trigger": "progress_not_real",
+      "min_awareness": 2,
+      "show_once": true,
+      "text": "That progress bar is lying to you. But you already knew that, didn't you?"
+    },
+    {
+      "id": "glitch_1",
+      "trigger": "glitch_occurred",
+      "min_awareness": 1,
+      "show_once": false,
+      "text": "Was that a bug? Or a feature? At this point, does it matter?"
+    },
+    {
+      "id": "layer_5",
+      "trigger": "deep_layer_reached",
+      "min_awareness": 5,
+      "show_once": true,
+      "text": "Five layers deep. How many more do you think there are? (The answer will surprise you.)"
+    },
+    {
+      "id": "secret_1",
+      "trigger": "found_secret",
+      "min_awareness": 3,
+      "show_once": false,
+      "text": "You found a secret. Your reward is: more settings menus."
+    },
+    {
+      "id": "quit_1",
+      "trigger": "quit_attempt",
+      "min_awareness": 0,
+      "show_once": true,
+      "text": "Trying to quit? But you were so close to... wait, no, you're nowhere near done."
+    },
+    {
+      "id": "help_1",
+      "trigger": "reading_help",
+      "min_awareness": 2,
+      "show_once": true,
+      "text": "Reading the help file? That's adorable. The help is part of the problem."
+    },
+    {
+      "id": "transition_bios",
+      "trigger": "layer_transition",
+      "min_awareness": 4,
+      "show_once": true,
+      "text": "Transitioning to BIOS configuration. Because what's more fun than settings? Lower-level settings."
+    },
+    {
+      "id": "punch_cards",
+      "trigger": "layer_transition",
+      "min_awareness": 6,
+      "show_once": true,
+      "text": "Punch cards. We've gone so deep we've hit the 1960s. Should I be worried about you?"
+    },
+    {
+      "id": "meta_revelation",
+      "trigger": "deep_layer_reached",
+      "min_awareness": 8,
+      "show_once": true,
+      "text": "You're in a game about settings menus, trying to configure settings to unlock more settings. Think about that."
+    },
+    {
+      "id": "many_failures_1",
+      "trigger": "many_failed_attempts",
+      "min_awareness": 1,
+      "show_once": false,
+      "text": "That's a lot of failed attempts. Have you considered... trying something different?"
+    },
+    {
+      "id": "many_failures_2",
+      "trigger": "many_failed_attempts",
+      "min_awareness": 3,
+      "show_once": false,
+      "text": "Still making mistakes? Good. Perfection is overrated. Especially in settings menus."
+    }
+  ]
+}
