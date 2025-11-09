@@ -2,11 +2,11 @@ import tempfile
 
 import pytest
 
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.hidden_conditions import HiddenCondition, HiddenConditionTracker
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
+from src.core.enums import SettingState, SettingType
+from src.core.game_state import GameState
+from src.core.hidden_conditions import HiddenCondition, HiddenConditionTracker
+from src.core.menu import MenuNode
+from src.core.types import Setting
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import pytest
-from ready_to_start.generation.madlibs import MadLibsEngine
-from ready_to_start.core.config_loader import ConfigLoader
+from src.generation.madlibs import MadLibsEngine
+from src.core.config_loader import ConfigLoader
 
 
 class TestMadLibsEngine:

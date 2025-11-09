@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.ui.renderer import ANSIColor, TextRenderer
+from src.ui.renderer import ANSIColor, TextRenderer
 
 
 def test_ansi_color_get_color():

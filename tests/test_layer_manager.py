@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 
-from ready_to_start.core.layer_manager import InterfaceLayer, LayerManager
+from src.core.layer_manager import InterfaceLayer, LayerManager
 
 
 @pytest.fixture

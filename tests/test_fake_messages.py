@@ -2,7 +2,7 @@ from random import Random
 
 import pytest
 
-from ready_to_start.anti_patterns.messages import (
+from src.anti_patterns.messages import (
     FakeMessage,
     FakeMessageGenerator,
     MessageScheduler,

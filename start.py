@@ -9,12 +9,12 @@ that don't actually do anything. Enjoy.
 import sys
 from pathlib import Path
 
-from ready_to_start.core.dependencies import SimpleDependency
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
-from ready_to_start.ui.main_loop import UILoop
+from src.core.dependencies import SimpleDependency
+from src.core.enums import SettingState, SettingType
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
+from src.core.types import Setting
+from src.ui.main_loop import UILoop
 
 
 def create_demo_game() -> GameState:

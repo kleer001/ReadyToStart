@@ -2,7 +2,7 @@ from random import Random
 
 import pytest
 
-from ready_to_start.anti_patterns.effects import (
+from src.anti_patterns.effects import (
     BlinkSettingEffect,
     DisableInputEffect,
     EffectContext,
@@ -15,10 +15,10 @@ from ready_to_start.anti_patterns.effects import (
     ShuffleMenuEffect,
     SwapSettingsEffect,
 )
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
+from src.core.enums import SettingState, SettingType
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
+from src.core.types import Setting
 
 
 @pytest.fixture

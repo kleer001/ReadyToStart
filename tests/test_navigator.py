@@ -1,7 +1,7 @@
 """Tests for navigator module."""
 
-from ready_to_start.core.enums import SettingState
-from ready_to_start.core.navigator import MenuNavigator
+from src.core.enums import SettingState
+from src.core.navigator import MenuNavigator
 
 
 def test_navigator_initialization(game_state):
@@ -55,7 +55,7 @@ def test_navigate(multi_menu_state):
 
 def test_available_options_no_current_menu():
     """Test available options when no current menu."""
-    from ready_to_start.core.game_state import GameState
+    from src.core.game_state import GameState
 
     state = GameState()
     navigator = MenuNavigator(state)

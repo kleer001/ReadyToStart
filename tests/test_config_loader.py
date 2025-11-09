@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from ready_to_start.core.config_loader import ConfigLoader, GenerationConfig
+from src.core.config_loader import ConfigLoader, GenerationConfig
 
 
 class TestConfigLoader:

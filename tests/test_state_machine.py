@@ -1,8 +1,8 @@
 """Tests for state machine module."""
 
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.state_machine import SettingStateMachine
-from ready_to_start.core.types import Setting
+from src.core.enums import SettingState, SettingType
+from src.core.state_machine import SettingStateMachine
+from src.core.types import Setting
 
 
 def test_valid_transitions():

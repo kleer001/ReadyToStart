@@ -5,7 +5,7 @@ This script prints a text-based representation of setting dependencies.
 For graphical visualization, install graphviz or networkx.
 """
 
-from ready_to_start.core.game_state import GameState
+from src.core.game_state import GameState
 
 
 def visualize_dependencies_text(state: GameState):

@@ -1,7 +1,7 @@
 import pytest
-from ready_to_start.generation.pipeline import GenerationPipeline
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.menu import MenuNode
+from src.generation.pipeline import GenerationPipeline
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
 
 
 class TestGenerationPipeline:

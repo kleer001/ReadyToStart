@@ -1,11 +1,11 @@
 import pytest
 import networkx as nx
-from ready_to_start.generation.dep_generator import DependencyGenerator
-from ready_to_start.core.config_loader import GenerationConfig
-from ready_to_start.core.dependencies import SimpleDependency
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
+from src.generation.dep_generator import DependencyGenerator
+from src.core.config_loader import GenerationConfig
+from src.core.dependencies import SimpleDependency
+from src.core.enums import SettingState, SettingType
+from src.core.menu import MenuNode
+from src.core.types import Setting
 
 
 class TestDependencyGenerator:
@@ -79,19 +79,19 @@ class TestDependencyGenerator:
                 assert dep.required_state == SettingState.ENABLED
 
     def test_find_critical_path(self, config, simple_graph, simple_menus):
-        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+        from src.generation.graph_analyzer import GraphAnalyzer
 
         path = GraphAnalyzer.find_critical_path(simple_graph)
         assert path == ["A", "B", "C"]
 
     def test_get_start_nodes(self, config, simple_graph, simple_menus):
-        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+        from src.generation.graph_analyzer import GraphAnalyzer
 
         start_nodes = GraphAnalyzer.get_start_nodes(simple_graph)
         assert start_nodes == ["A"]
 
     def test_get_end_nodes(self, config, simple_graph, simple_menus):
-        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+        from src.generation.graph_analyzer import GraphAnalyzer
 
         end_nodes = GraphAnalyzer.get_end_nodes(simple_graph)
         assert end_nodes == ["C"]

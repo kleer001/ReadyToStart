@@ -1,8 +1,8 @@
 import pytest
 
-from ready_to_start.core.enums import SettingType
-from ready_to_start.core.types import Setting
-from ready_to_start.ui.setting_editor import (
+from src.core.enums import SettingType
+from src.core.types import Setting
+from src.ui.setting_editor import (
     BooleanEditor,
     FloatEditor,
     IntegerEditor,

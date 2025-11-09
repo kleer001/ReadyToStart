@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.ui.input_handler import Command, InputHandler
+from src.ui.input_handler import Command, InputHandler
 
 
 def test_input_handler_parse_command():

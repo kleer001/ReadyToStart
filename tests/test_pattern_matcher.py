@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.generation.pattern_matcher import DependencyPatternMatcher
+from src.generation.pattern_matcher import DependencyPatternMatcher
 
 
 class TestDependencyPatternMatcher:

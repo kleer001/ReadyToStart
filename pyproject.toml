@@ -25,8 +25,8 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["ready_to_start*"]
-exclude = ["tests*", "config*", "scripts*"]
+include = ["src*"]
+exclude = ["tests*", "config*", "scripts*", "docs*"]
 
 [tool.black]
 line-length = 88
@@ -47,7 +47,7 @@ python_functions = ["test_*"]
 addopts = "-v"
 
 [tool.coverage.run]
-source = ["ready_to_start"]
+source = ["src"]
 omit = ["*/tests/*", "*/__init__.py"]
 
 [tool.coverage.report]

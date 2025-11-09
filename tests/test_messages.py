@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.ui.messages import MessageDisplay, MessageType
+from src.ui.messages import MessageDisplay, MessageType
 
 
 @pytest.fixture

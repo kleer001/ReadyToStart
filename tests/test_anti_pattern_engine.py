@@ -1,13 +1,13 @@
 
 import pytest
 
-from ready_to_start.anti_patterns.effects import FakeErrorEffect, FreezeProgressEffect
-from ready_to_start.anti_patterns.engine import AntiPatternEngine
-from ready_to_start.anti_patterns.triggers import CounterTrigger, RandomTrigger
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
+from src.anti_patterns.effects import FakeErrorEffect, FreezeProgressEffect
+from src.anti_patterns.engine import AntiPatternEngine
+from src.anti_patterns.triggers import CounterTrigger, RandomTrigger
+from src.core.enums import SettingState, SettingType
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
+from src.core.types import Setting
 
 
 @pytest.fixture
@@ -141,7 +141,7 @@ def test_pattern_cooldown_expires(engine, ui_state):
 
 
 def test_effect_duration_expiration(engine):
-    from ready_to_start.anti_patterns.triggers import OnceTrigger
+    from src.anti_patterns.triggers import OnceTrigger
 
     base_trigger = CounterTrigger("test_trigger", "clicks", 1)
     trigger = OnceTrigger("once", base_trigger)

@@ -1,7 +1,7 @@
 import pytest
 from configparser import ConfigParser
 
-from ready_to_start.ui.progress_bars import (
+from src.ui.progress_bars import (
     NestedProgressBar,
     OscillatingProgressBar,
     ProgressBarFactory,
