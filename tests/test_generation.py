@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ready_to_start.generation.pipeline import GenerationPipeline
+from src.generation.pipeline import GenerationPipeline
 
 
 def validate_state(state):

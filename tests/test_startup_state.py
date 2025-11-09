@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from start import create_demo_game
-from ready_to_start.core.enums import SettingState
+from src.core.enums import SettingState
 
 def diagnose_startup_state():
     """Check the state of the game at startup."""

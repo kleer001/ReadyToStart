@@ -8,9 +8,9 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).parent))
 
 from start import create_demo_game
-from ready_to_start.ui.main_loop import UILoop
-from ready_to_start.ui.messages import MessageType
-from ready_to_start.core.enums import SettingState
+from src.ui.main_loop import UILoop
+from src.ui.messages import MessageType
+from src.core.enums import SettingState
 
 def test_ui_locked_interaction():
     """Simulate user trying to select a LOCKED setting."""

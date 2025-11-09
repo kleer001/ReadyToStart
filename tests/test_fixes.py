@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Quick test to verify the fixes for propagate_changes and dependency hints."""
 
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.dependencies import SimpleDependency
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
+from src.core.types import Setting
+from src.core.enums import SettingState, SettingType
+from src.core.dependencies import SimpleDependency
 
 def test_propagate_changes():
     """Test that propagate_changes() method exists and works."""
@@ -151,7 +151,7 @@ def test_completion_propagation():
     state.add_menu(menu)
 
     # Initially, menu should be incomplete
-    from ready_to_start.core.enums import CompletionState
+    from src.core.enums import CompletionState
     initial_completion = menu.calculate_completion()
     if initial_completion == CompletionState.INCOMPLETE:
         print("✓ Menu starts as incomplete")

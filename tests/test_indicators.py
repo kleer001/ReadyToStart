@@ -1,7 +1,7 @@
 import pytest
 
-from ready_to_start.core.enums import SettingState
-from ready_to_start.ui.indicators import StateIndicator
+from src.core.enums import SettingState
+from src.ui.indicators import StateIndicator
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.ui.hint_display import HintDisplay
+from src.ui.hint_display import HintDisplay
 
 
 class TestHintDisplay:

@@ -1,8 +1,8 @@
 import pytest
 import networkx as nx
-from ready_to_start.generation.topology import TopologyConverter
-from ready_to_start.generation.wfc import WFCGrid, WFCCell
-from ready_to_start.core.config_loader import GenerationConfig
+from src.generation.topology import TopologyConverter
+from src.generation.wfc import WFCGrid, WFCCell
+from src.core.config_loader import GenerationConfig
 
 
 class TestTopologyConverter:
@@ -90,7 +90,7 @@ class TestTopologyConverter:
         assert node_id == "Audio_2_3"
 
     def test_get_start_nodes(self, config):
-        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+        from src.generation.graph_analyzer import GraphAnalyzer
 
         converter = TopologyConverter(config)
         converter.graph.add_node("A")
@@ -101,7 +101,7 @@ class TestTopologyConverter:
         assert start_nodes == ["A"]
 
     def test_get_end_nodes(self, config):
-        from ready_to_start.generation.graph_analyzer import GraphAnalyzer
+        from src.generation.graph_analyzer import GraphAnalyzer
 
         converter = TopologyConverter(config)
         converter.graph.add_node("A")

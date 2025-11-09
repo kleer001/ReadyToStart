@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from ready_to_start.core.evaluator import DependencyEvaluator
-from ready_to_start.core.progress import ProgressCalculator
-from ready_to_start.core.propagation import StatePropagator
-from ready_to_start.generation.pipeline import GenerationPipeline
+from src.core.evaluator import DependencyEvaluator
+from src.core.progress import ProgressCalculator
+from src.core.propagation import StatePropagator
+from src.generation.pipeline import GenerationPipeline
 
 
 def test_game_logic():

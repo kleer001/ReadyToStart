@@ -1,8 +1,8 @@
 import pytest
-from ready_to_start.generation.compiler import SettingCompiler
-from ready_to_start.generation.madlibs import MadLibsEngine
-from ready_to_start.core.config_loader import ConfigLoader, GenerationConfig
-from ready_to_start.core.enums import SettingState, SettingType
+from src.generation.compiler import SettingCompiler
+from src.generation.madlibs import MadLibsEngine
+from src.core.config_loader import ConfigLoader, GenerationConfig
+from src.core.enums import SettingState, SettingType
 
 
 class TestSettingCompiler:

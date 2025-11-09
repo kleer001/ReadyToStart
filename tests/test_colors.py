@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ready_to_start.ui.renderer import ANSIColor
+from src.ui.renderer import ANSIColor
 
 
 def test_basic_colors():

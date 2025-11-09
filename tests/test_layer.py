@@ -5,11 +5,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ready_to_start.core.layer_manager import LayerManager
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.ui.renderer_factory import RendererFactory
+from src.core.layer_manager import LayerManager
+from src.core.menu import MenuNode
+from src.core.types import Setting
+from src.core.enums import SettingState, SettingType
+from src.ui.renderer_factory import RendererFactory
 
 
 def test_layer(layer_id: str):

@@ -1,0 +1,101 @@
+import random
+
+from src.core.config_loader import ConfigLoader
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
+from src.generation.compiler import SettingCompiler
+from src.generation.dep_generator import DependencyGenerator
+from src.generation.graph_analyzer import GraphAnalyzer
+from src.generation.madlibs import MadLibsEngine
+from src.generation.topology import TopologyConverter
+from src.generation.wfc import WFCGenerator
+
+MAX_GENERATION_ATTEMPTS = 5
+
+
+class GenerationPipeline:
+    def __init__(self, config_dir: str = "config/"):
+        self.loader = ConfigLoader(config_dir)
+        self.config = self.loader.load_generation_params()
+        self.wfc_rules = self.loader.load_wfc_rules()
+        self.templates = self.loader.load_templates()
+
+        self.madlibs = MadLibsEngine(self.templates, self.loader)
+        self.compiler = SettingCompiler(self.config, self.madlibs)
+
+    def generate(self, seed: int | None = None) -> GameState:
+        if seed is not None:
+            random.seed(seed)
+
+        for attempt in range(MAX_GENERATION_ATTEMPTS):
+            try:
+                return self._generate_once()
+            except ValueError:
+                if attempt == MAX_GENERATION_ATTEMPTS - 1:
+                    raise
+                continue
+
+    def _generate_once(self) -> GameState:
+        graph = self._generate_topology()
+        game_state = self._create_game_state()
+        critical_path = self._get_critical_path_from_graph(graph)
+
+        self._populate_menus(graph, game_state, critical_path)
+        self._add_dependencies(graph, game_state)
+        self._set_starting_menu(graph, game_state)
+
+        return game_state
+
+    def _generate_topology(self):
+        wfc = WFCGenerator(self.wfc_rules, self.config)
+        grid = wfc.generate()
+
+        converter = TopologyConverter(self.config)
+        graph = converter.grid_to_graph(grid)
+
+        if not converter.validate_graph():
+            raise ValueError("Generated invalid graph")
+
+        converter.prune_dead_ends()
+        return graph
+
+    def _create_game_state(self) -> GameState:
+        return GameState()
+
+    def _get_critical_path_from_graph(self, graph) -> list[str]:
+        converter = TopologyConverter(self.config)
+        converter.graph = graph
+        return converter.get_critical_path()
+
+    def _populate_menus(
+        self, graph, game_state: GameState, critical_path: list[str]
+    ) -> None:
+        for node_id in graph.nodes():
+            category = graph.nodes[node_id]["category"]
+            is_critical = node_id in critical_path
+
+            menu = MenuNode(
+                id=node_id,
+                category=category,
+                connections=list(graph.successors(node_id)),
+            )
+
+            settings = self.compiler.compile_settings(node_id, category, is_critical)
+            for setting in settings:
+                menu.add_setting(setting)
+
+            game_state.add_menu(menu)
+
+    def _add_dependencies(self, graph, game_state: GameState) -> None:
+        dep_gen = DependencyGenerator(graph, self.config, game_state.menus)
+        dependencies = dep_gen.generate_dependencies()
+
+        for setting_id, deps in dependencies.items():
+            for dep in deps:
+                game_state.resolver.add_dependency(setting_id, dep)
+
+    def _set_starting_menu(self, graph, game_state: GameState) -> None:
+        start_nodes = GraphAnalyzer.get_start_nodes(graph)
+        game_state.current_menu = (
+            start_nodes[0] if start_nodes else list(graph.nodes())[0]
+        )

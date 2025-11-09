@@ -2,7 +2,7 @@ from random import Random
 
 import pytest
 
-from ready_to_start.anti_patterns.glitches import (
+from src.anti_patterns.glitches import (
     CharacterCorruptionGlitch,
     CharacterDeletionGlitch,
     CharacterDuplicationGlitch,

@@ -1,6 +1,6 @@
 import pytest
-from ready_to_start.generation.wfc import WFCCell, WFCGrid, WFCGenerator
-from ready_to_start.core.config_loader import GenerationConfig
+from src.generation.wfc import WFCCell, WFCGrid, WFCGenerator
+from src.core.config_loader import GenerationConfig
 
 
 class TestWFCCell:

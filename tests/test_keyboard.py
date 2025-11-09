@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.ui.keyboard import Key, KeyboardReader
+from src.ui.keyboard import Key, KeyboardReader
 
 
 def test_key_constants():

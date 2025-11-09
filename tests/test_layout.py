@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.ui.layout import LayoutManager, Region
+from src.ui.layout import LayoutManager, Region
 
 
 def test_region_contains():

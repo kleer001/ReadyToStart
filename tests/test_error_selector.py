@@ -1,6 +1,6 @@
 import pytest
 
-from ready_to_start.ui.error_selector import ErrorMessageSelector
+from src.ui.error_selector import ErrorMessageSelector
 
 
 class TestErrorMessageSelector:

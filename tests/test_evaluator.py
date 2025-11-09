@@ -1,11 +1,11 @@
 import pytest
 
-from ready_to_start.core.dependencies import SimpleDependency, ValueDependency
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.evaluator import DependencyEvaluator
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
+from src.core.dependencies import SimpleDependency, ValueDependency
+from src.core.enums import SettingState, SettingType
+from src.core.evaluator import DependencyEvaluator
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
+from src.core.types import Setting
 
 
 @pytest.fixture

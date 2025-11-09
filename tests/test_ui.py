@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from ready_to_start.core.enums import SettingState, SettingType
-from ready_to_start.core.game_state import GameState
-from ready_to_start.core.menu import MenuNode
-from ready_to_start.core.types import Setting
-from ready_to_start.ui.main_loop import UILoop
+from src.core.enums import SettingState, SettingType
+from src.core.game_state import GameState
+from src.core.menu import MenuNode
+from src.core.types import Setting
+from src.ui.main_loop import UILoop
 
 
 def create_sample_game_state() -> GameState:

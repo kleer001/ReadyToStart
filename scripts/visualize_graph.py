@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import networkx as nx
 import matplotlib.pyplot as plt
-from ready_to_start.generation.pipeline import GenerationPipeline
+from src.generation.pipeline import GenerationPipeline
 
 
 def visualize_generation(seed: int = 42, output_file: str = None):

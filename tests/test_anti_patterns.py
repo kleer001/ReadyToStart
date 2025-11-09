@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
-from ready_to_start.anti_patterns.engine import AntiPatternEngine
-from ready_to_start.generation.pipeline import GenerationPipeline
+from src.anti_patterns.engine import AntiPatternEngine
+from src.generation.pipeline import GenerationPipeline
 
 
 def test_anti_patterns():
