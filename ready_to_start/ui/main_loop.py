@@ -1,5 +1,7 @@
 import time
+from pathlib import Path
 
+from ready_to_start.anti_patterns.engine import AntiPatternEngine
 from ready_to_start.core.enums import SettingState
 from ready_to_start.core.game_state import GameState
 from ready_to_start.ui.input_handler import InputHandler
@@ -7,7 +9,6 @@ from ready_to_start.ui.keyboard import Key, KeyboardReader
 from ready_to_start.ui.menu_display import MenuDisplay
 from ready_to_start.ui.messages import MessageDisplay, MessageType
 from ready_to_start.ui.navigation import NavigationController
-from ready_to_start.ui.progress_bars import ProgressBarFactory
 from ready_to_start.ui.renderer import TextRenderer
 from ready_to_start.ui.setting_editor import SettingEditor
 
@@ -29,6 +30,21 @@ class UILoop:
         self.last_frame_time = time.time()
         self.selected_index = 0
         self.navigation_mode = True
+
+        self.ui_state = {}
+        self.anti_pattern_engine = AntiPatternEngine(
+            game_state, self.ui_state, seed=None
+        )
+
+        anti_pattern_config = Path(config_dir) / "anti_patterns.ini"
+        if anti_pattern_config.exists():
+            self.anti_pattern_engine.load_from_config(str(anti_pattern_config))
+
+        fake_message_config = Path(config_dir) / "fake_messages.ini"
+        if fake_message_config.exists():
+            self.anti_pattern_engine.message_generator.load_from_config(
+                str(fake_message_config)
+            )
 
     def start(self, start_menu_id: str):
         success, error = self.navigation.navigate_to(start_menu_id)
@@ -67,6 +83,13 @@ class UILoop:
             self.navigation.current_menu.completion_state = (
                 self.navigation.current_menu.calculate_completion()
             )
+
+        self.anti_pattern_engine.increment_counter("ui_renders")
+        self.anti_pattern_engine.update()
+
+        if "fake_messages" in self.ui_state:
+            for msg in self.ui_state.pop("fake_messages", []):
+                self.message_display.add_message(msg["text"], MessageType.ERROR)
 
     def _render(self):
         self.renderer.clear_screen()
@@ -124,6 +147,7 @@ class UILoop:
         elif key == Key.RIGHT:
             self._navigate_to_first_connection()
         elif key == Key.ENTER:
+            self.anti_pattern_engine.increment_counter("clicks")
             self._select_current()
         elif key == ":":
             self.navigation_mode = False
@@ -133,7 +157,10 @@ class UILoop:
             self._handle_help()
 
     def _navigate_to_first_connection(self):
-        if not self.navigation.current_menu or not self.navigation.current_menu.connections:
+        if (
+            not self.navigation.current_menu
+            or not self.navigation.current_menu.connections
+        ):
             return
 
         first_connection = self.navigation.current_menu.connections[0]
@@ -141,8 +168,10 @@ class UILoop:
 
         if success:
             self.selected_index = 0
+            self.anti_pattern_engine.increment_counter("menu_visits")
             self.message_display.add_message(
-                f"Navigated to {self.navigation.current_menu.category}", MessageType.SUCCESS
+                f"Navigated to {self.navigation.current_menu.category}",
+                MessageType.SUCCESS,
             )
         else:
             self.message_display.add_message(error, MessageType.ERROR)
@@ -186,14 +215,17 @@ class UILoop:
                         f"'{setting.label}' is locked. To unlock:", MessageType.WARNING
                     )
                     for hint in hints:
-                        self.message_display.add_message(f"  • {hint}", MessageType.WARNING)
+                        self.message_display.add_message(
+                            f"  • {hint}", MessageType.WARNING
+                        )
                 else:
                     self.message_display.add_message(
                         f"'{setting.label}' is locked - dependencies not met",
                         MessageType.WARNING,
                     )
             else:
-                # Dependencies met but still locked (shouldn't happen with propagate_changes)
+                # Dependencies met but still locked
+                # (shouldn't happen with propagate_changes)
                 self.message_display.add_message(
                     f"'{setting.label}' is locked", MessageType.WARNING
                 )
@@ -225,9 +257,11 @@ class UILoop:
             setting.visit_count += 1
             setting.last_modified = time.time()
 
-            # Transition to ENABLED state if currently DISABLED (marking as "configured")
+            # Transition to ENABLED state if currently DISABLED
+            # (marking as "configured")
             if setting.state == SettingState.DISABLED:
                 setting.state = SettingState.ENABLED
+                self.anti_pattern_engine.increment_counter("settings_enabled")
 
             self.game_state.propagate_changes()
             self.message_display.add_message(
@@ -244,7 +278,9 @@ class UILoop:
                 self.navigation_mode = True
             return
 
-        self.navigation.add_command_to_history(f"{command.action} {' '.join(command.args)}")
+        self.navigation.add_command_to_history(
+            f"{command.action} {' '.join(command.args)}"
+        )
 
         if command.action == "list":
             self._handle_list()
@@ -276,7 +312,9 @@ class UILoop:
         try:
             setting_index = int(command.get_arg(0)) - 1
         except (ValueError, TypeError):
-            self.message_display.add_message("Invalid setting number", MessageType.ERROR)
+            self.message_display.add_message(
+                "Invalid setting number", MessageType.ERROR
+            )
             return
 
         visible_settings = [
@@ -300,14 +338,17 @@ class UILoop:
                         f"'{setting.label}' is locked. To unlock:", MessageType.WARNING
                     )
                     for hint in hints:
-                        self.message_display.add_message(f"  • {hint}", MessageType.WARNING)
+                        self.message_display.add_message(
+                            f"  • {hint}", MessageType.WARNING
+                        )
                 else:
                     self.message_display.add_message(
                         f"'{setting.label}' is locked - dependencies not met",
                         MessageType.WARNING,
                     )
             else:
-                # Dependencies met but still locked (shouldn't happen with propagate_changes)
+                # Dependencies met but still locked
+                # (shouldn't happen with propagate_changes)
                 self.message_display.add_message(
                     f"'{setting.label}' is locked", MessageType.WARNING
                 )
@@ -339,9 +380,11 @@ class UILoop:
             setting.visit_count += 1
             setting.last_modified = time.time()
 
-            # Transition to ENABLED state if currently DISABLED (marking as "configured")
+            # Transition to ENABLED state if currently DISABLED
+            # (marking as "configured")
             if setting.state == SettingState.DISABLED:
                 setting.state = SettingState.ENABLED
+                self.anti_pattern_engine.increment_counter("settings_enabled")
 
             self.game_state.propagate_changes()
             self.message_display.add_message(
@@ -358,7 +401,9 @@ class UILoop:
 
         menu = self.navigation.find_menu_by_name(menu_name)
         if not menu:
-            self.message_display.add_message(f"Menu not found: {menu_name}", MessageType.ERROR)
+            self.message_display.add_message(
+                f"Menu not found: {menu_name}", MessageType.ERROR
+            )
             return
 
         success, error = self.navigation.navigate_to(menu.id)
@@ -409,7 +454,9 @@ Command Mode:
             for m in self.game_state.menus.values()
         )
 
-        progress = (enabled_settings / total_settings * 100) if total_settings > 0 else 0
+        progress = (
+            (enabled_settings / total_settings * 100) if total_settings > 0 else 0
+        )
 
         status_text = f"""
 Game Status:

@@ -1106,162 +1106,135 @@ dependency_check = 0.8
 ## Helper Scripts
 
 ### Anti-Pattern Tester
-**File:** `scripts/test_antipatterns.py`
+**File:** `scripts/test_anti_patterns.py`
 ```python
 #!/usr/bin/env python3
-"""Test all anti-pattern systems"""
+from generation.pipeline import GenerationPipeline
+from anti_patterns.engine import AntiPatternEngine
 
-from ready_to_start.ui.unreliable_progress import ProgressSystemController
-from ready_to_start.ui.moving_elements import MovingElementController
-from ready_to_start.ui.fake_messages import FakeMessageGenerator
-from ready_to_start.ui.glitch_effects import GlitchController
-from ready_to_start.ui.freeze_system import FreezeController
-
-def test_progress_bars():
-    print("=== Testing Unreliable Progress Bars ===")
-    controller = ProgressSystemController()
-    controller.load_behaviors_from_config("config/unreliable_progress.ini")
-    controller.show_fake_loading(duration=5.0)
-
-def test_moving_elements():
-    print("\n=== Testing Moving Elements ===")
-    # Create mock game state
-    from ready_to_start.generation.pipeline import GenerationPipeline
+def test_anti_patterns():
     pipeline = GenerationPipeline()
-    game_state = pipeline.generate(seed=42)
+    state = pipeline.generate(seed=42)
 
-    controller = MovingElementController(game_state)
-    controller.load_from_config("config/moving_elements.ini")
+    ui_state = {}
+    engine = AntiPatternEngine(state, ui_state, seed=42)
+    engine.load_from_config("config/anti_patterns.ini")
 
-    # Simulate element movement
-    for i in range(5):
-        print(f"\nIteration {i+1}:")
-        settings = list(game_state.settings.keys())[:10]
-        new_positions = controller.update(settings)
-        print(f"Elements moved: {len(new_positions)}")
+    print("Testing anti-pattern triggers...")
 
-def test_fake_messages():
-    print("\n=== Testing Fake Messages ===")
-    generator = FakeMessageGenerator()
-    generator.load_templates_from_config("config/fake_messages.ini")
+    for i in range(100):
+        engine.increment_counter("clicks", 1)
+        engine.update()
 
-    context = {"setting": "Audio Volume", "category": "Audio"}
+        if i % 10 == 0:
+            print(f"Tick {i}: Active effects = {engine.get_active_effect_ids()}")
 
-    for msg_type in ["error", "warning", "system", "critical"]:
-        msg = generator.generate(msg_type, context)
-        print(f"[{msg.message_type.upper()}] {msg.text}")
-
-def test_glitches():
-    print("\n=== Testing Glitch Effects ===")
-    controller = GlitchController()
-
-    sample_text = """
-    ╔═══════════════════════════════════════╗
-    ║ AUDIO SETTINGS                        ║
-    ╠═══════════════════════════════════════╣
-    ║ 1. [ ] Master Volume (disabled)       ║
-    ║ 2. [X] Enable Audio (enabled)         ║
-    ╚═══════════════════════════════════════╝
-    """
-
-    for effect_type in ['corruption', 'color_bleed', 'position_shift', 'duplicate', 'static']:
-        print(f"\n--- {effect_type} ---")
-        controller.trigger_specific_glitch(effect_type, intensity=0.7, duration=1.0)
-        glitched = controller.apply_all(sample_text)
-        print(glitched)
-
-def test_freezes():
-    print("\n=== Testing Freeze System ===")
-    controller = FreezeController()
-
-    print("Simulating normal action...")
-    controller.add_artificial_delay(1.0)
-
-    print("\nTriggering freeze...")
-    freeze = controller.trigger_freeze("thinking")
-    while freeze.update():
-        controller._show_freeze_indicator(freeze)
-    print("\nFreeze complete!")
+    print(f"\nFinal active effects: {engine.get_active_effect_ids()}")
+    print(f"UI state modifications: {list(ui_state.keys())}")
 
 if __name__ == "__main__":
-    test_progress_bars()
-    test_moving_elements()
-    test_fake_messages()
-    test_glitches()
-    test_freezes()
+    test_anti_patterns()
 ```
-
-### Glitch Intensity Controller
-**File:** `scripts/control_glitches.py`
-```python
-#!/usr/bin/env python3
-"""Adjust glitch intensity dynamically"""
-
-import sys
-from ready_to_start.ui.glitch_effects import GlitchController
-
-def set_intensity(level: str):
-    """Set glitch intensity level"""
-    controller = GlitchController()
-
-    levels = {
-        'none': 0.0,
-        'low': 0.01,
-        'medium': 0.05,
-        'high': 0.15,
-        'extreme': 0.50
-    }
-
-    if level not in levels:
-        print(f"Invalid level. Use: {', '.join(levels.keys())}")
-        return
-
-    controller.base_probability = levels[level]
-    print(f"Glitch intensity set to: {level} ({levels[level]*100:.1f}%)")
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: control_glitches.py <none|low|medium|high|extreme>")
-    else:
-        set_intensity(sys.argv[1])
-```
-
----
-
-## Config Files
-
-See sample configs embedded in each section above. All configs go in `config/` directory:
-
-- `config/unreliable_progress.ini`
-- `config/moving_elements.ini`
-- `config/fake_messages.ini`
-- `config/glitch_effects.ini`
-- `config/freeze_system.ini`
 
 ---
 
 ## Libraries Summary
 
 **Core:**
-- time (stdlib)
-- random (stdlib)
-- configparser (stdlib)
+- abc (abstract base classes)
+- dataclasses (clean data structures)
+- random (deterministic randomness)
+- configparser (INI loading)
 
-**No external dependencies needed**
+**No new external dependencies**
 
 ---
 
 ## Phase 5 Completion Criteria
 
-- [ ] Unreliable progress bars with all behavior types
-- [ ] Moving UI elements (shuffle, swap, vanish, duplicate)
-- [ ] Fake system messages with templates
-- [ ] Fake modal dialogs
-- [ ] Visual glitch effects (5+ types)
-- [ ] Freeze system with indicators
-- [ ] Artificial delay system
-- [ ] All behaviors configurable via INI
-- [ ] 80%+ test coverage
+- [x] Trigger system with 7 trigger types
+- [x] Effect system with 9 effect types
+- [x] Fake message generator with templates
+- [x] Message scheduler with tick-based delivery
+- [x] Glitch engine with 5 glitch types
+- [x] Anti-pattern orchestration engine
+- [ ] Configuration files (anti_patterns.ini, fake_messages.ini)
+- [ ] Integration with UI loop
+- [ ] 80%+ test coverage for all modules
 - [ ] Helper scripts functional
-- [ ] Anti-patterns trigger based on game events
-- [ ] User can't tell what's real vs fake (goal achieved)
+- [ ] All code passes linting (ruff)
+- [ ] All code formatted (black)
+
+---
+
+## Implementation Notes
+
+**Design Principles Applied:**
+
+1. **Single Responsibility:** Each class has one clear purpose
+   - Triggers detect conditions
+   - Effects apply changes
+   - Engine orchestrates
+   - Generator creates messages
+   - Glitches corrupt text
+
+2. **Open/Closed:** Easy to extend
+   - Add new trigger types by subclassing Trigger
+   - Add new effects by subclassing Effect
+   - Factories handle instantiation
+
+3. **Liskov Substitution:** All triggers/effects interchangeable
+   - Common interfaces
+   - Consistent lifecycle
+   - No special cases
+
+4. **Interface Segregation:** Minimal interfaces
+   - Trigger: just should_activate()
+   - Effect: just apply() and revert()
+   - No bloated base classes
+
+5. **Dependency Inversion:** Depend on abstractions
+   - Engine depends on Trigger/Effect interfaces
+   - Not concrete implementations
+   - Configurable composition
+
+**KISS Applied:**
+- Simple state management
+- No complex state machines
+- Straightforward tick-based updates
+- Clear data flow
+
+**DRY Applied:**
+- Factories eliminate duplication
+- Base classes share common logic
+- Composition over inheritance
+- Shared Random instance
+
+---
+
+## Integration Strategy
+
+The AntiPatternEngine integrates into the main UI loop:
+
+```python
+# In UILoop.__init__
+self.anti_pattern_engine = AntiPatternEngine(
+    self.game_state,
+    self.ui_state,
+    seed=42
+)
+self.anti_pattern_engine.load_from_config(config_dir / "anti_patterns.ini")
+
+# In UILoop.update_cycle
+self.anti_pattern_engine.increment_counter("ui_renders")
+self.anti_pattern_engine.update()
+
+# When rendering text
+display_text = self.anti_pattern_engine.apply_glitch(text)
+
+# On user actions
+self.anti_pattern_engine.increment_counter("clicks")
+self.anti_pattern_engine.trigger_event("setting_enabled")
+```
+
+No changes required to existing game logic - completely isolated system.
