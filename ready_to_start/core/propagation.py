@@ -85,11 +85,13 @@ class StatePropagator:
     def _parse_condition(self, cond_str: str) -> Callable[[Setting], bool]:
         if "==" in cond_str:
             attr, val = [s.strip() for s in cond_str.split("==")]
+
             def eq_check(s: Setting) -> bool:
                 attr_val = getattr(s, attr)
                 if isinstance(attr_val, SettingState):
                     return attr_val.value == val
                 return str(attr_val) == val
+
             return eq_check
         elif ">" in cond_str:
             attr, val = [s.strip() for s in cond_str.split(">")]

@@ -36,8 +36,7 @@ class DependencyEvaluator:
 
     def evaluate_all(self) -> dict[str, EvaluationResult]:
         return {
-            setting_id: self.evaluate(setting_id)
-            for setting_id in self.state.settings
+            setting_id: self.evaluate(setting_id) for setting_id in self.state.settings
         }
 
     def _evaluate_setting(self, setting_id: str) -> EvaluationResult:
