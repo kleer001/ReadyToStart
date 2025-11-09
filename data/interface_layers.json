@@ -1,0 +1,239 @@
+{
+  "layers": [
+    {
+      "id": "modern_settings_2020s",
+      "name": "Modern Settings Menu",
+      "era": "2020s",
+      "complexity": 3,
+      "ui_paradigm": "flat_design",
+      "features": ["smooth_scrolling", "search", "breadcrumbs", "tooltips"],
+      "color_scheme": "light_mode",
+      "next_layer_options": ["webapp_2010s", "mobile_2015", "desktop_gui_2000s"]
+    },
+    {
+      "id": "webapp_2010s",
+      "name": "Web Application Settings",
+      "era": "2010s",
+      "complexity": 4,
+      "ui_paradigm": "web_2_0",
+      "features": ["tabs", "ajax_loading", "dropdown_menus", "modal_dialogs"],
+      "color_scheme": "gradients",
+      "next_layer_options": ["desktop_gui_2000s", "mobile_app"]
+    },
+    {
+      "id": "mobile_2015",
+      "name": "Mobile App Settings",
+      "era": "2015",
+      "complexity": 3,
+      "ui_paradigm": "mobile_first",
+      "features": ["swipe_gestures", "hamburger_menu", "cards", "pull_to_refresh"],
+      "color_scheme": "material_design",
+      "next_layer_options": ["desktop_gui_2000s", "webapp_2010s"]
+    },
+    {
+      "id": "desktop_gui_2000s",
+      "name": "Desktop Application",
+      "era": "2000s",
+      "complexity": 4,
+      "ui_paradigm": "traditional_gui",
+      "features": ["menu_bar", "toolbars", "tree_view", "property_sheets"],
+      "color_scheme": "windows_xp",
+      "next_layer_options": ["windows_95", "mac_os_9"]
+    },
+    {
+      "id": "windows_95",
+      "name": "Windows 95 Control Panel",
+      "era": "1995",
+      "complexity": 5,
+      "ui_paradigm": "win95",
+      "features": ["nested_dialogs", "wizards", "help_contents", "apply_button"],
+      "color_scheme": "teal_gray",
+      "next_layer_options": ["dos_config", "mac_system_7"]
+    },
+    {
+      "id": "mac_os_9",
+      "name": "Mac OS 9 Preferences",
+      "era": "1999",
+      "complexity": 5,
+      "ui_paradigm": "classic_mac",
+      "features": ["control_strips", "extensions_manager", "desk_accessories"],
+      "color_scheme": "platinum",
+      "next_layer_options": ["dos_config", "mac_system_7"]
+    },
+    {
+      "id": "dos_config",
+      "name": "DOS Configuration",
+      "era": "1990",
+      "complexity": 6,
+      "ui_paradigm": "text_menu",
+      "features": ["arrow_keys", "config_sys", "autoexec_bat", "conventional_memory"],
+      "color_scheme": "blue_white_text",
+      "next_layer_options": ["bios_setup", "unix_config"]
+    },
+    {
+      "id": "mac_system_7",
+      "name": "Mac System 7 Control Panels",
+      "era": "1991",
+      "complexity": 5,
+      "ui_paradigm": "classic_mac_early",
+      "features": ["desk_accessories", "chooser", "bomb_dialogs"],
+      "color_scheme": "black_white",
+      "next_layer_options": ["bios_setup", "unix_config"]
+    },
+    {
+      "id": "bios_setup",
+      "name": "BIOS Setup Utility",
+      "era": "1985",
+      "complexity": 7,
+      "ui_paradigm": "firmware",
+      "features": ["save_exit", "load_defaults", "warning_prompts", "hex_values"],
+      "color_scheme": "blue_background",
+      "next_layer_options": ["punch_cards", "switch_panel", "terminal"]
+    },
+    {
+      "id": "unix_config",
+      "name": "UNIX Configuration Files",
+      "era": "1980s",
+      "complexity": 7,
+      "ui_paradigm": "text_files",
+      "features": ["vi_editor", "config_files", "daemons", "permissions"],
+      "color_scheme": "green_terminal",
+      "next_layer_options": ["punch_cards", "terminal", "switch_panel"]
+    },
+    {
+      "id": "terminal",
+      "name": "Terminal Configuration",
+      "era": "1970s",
+      "complexity": 8,
+      "ui_paradigm": "teletype",
+      "features": ["line_editing", "echoing", "control_characters"],
+      "color_scheme": "amber_monochrome",
+      "next_layer_options": ["punch_cards", "switch_panel"]
+    },
+    {
+      "id": "punch_cards",
+      "name": "Punch Card Configuration",
+      "era": "1960s",
+      "complexity": 9,
+      "ui_paradigm": "batch_processing",
+      "features": ["jcl", "job_control", "card_deck", "sequence_numbers"],
+      "color_scheme": "card_imagery",
+      "next_layer_options": ["switch_panel", "quantum_interface"]
+    },
+    {
+      "id": "switch_panel",
+      "name": "Front Panel Switches",
+      "era": "1950s",
+      "complexity": 9,
+      "ui_paradigm": "hardware_direct",
+      "features": ["toggle_switches", "led_indicators", "binary_input"],
+      "color_scheme": "physical_hardware",
+      "next_layer_options": ["quantum_interface", "metaphysical", "final_layer"]
+    },
+    {
+      "id": "quantum_interface",
+      "name": "Quantum Configuration",
+      "era": "future",
+      "complexity": 10,
+      "ui_paradigm": "quantum_superposition",
+      "features": ["entangled_settings", "probability_states", "observation_collapse"],
+      "color_scheme": "quantum_effects",
+      "next_layer_options": ["metaphysical", "recursive_meta"]
+    },
+    {
+      "id": "metaphysical",
+      "name": "Metaphysical Settings",
+      "era": "outside_time",
+      "complexity": 10,
+      "ui_paradigm": "abstract_concepts",
+      "features": ["platonic_forms", "essence_modification", "reality_parameters"],
+      "color_scheme": "void_aesthetics",
+      "next_layer_options": ["recursive_meta", "final_layer"]
+    },
+    {
+      "id": "recursive_meta",
+      "name": "The Settings for Settings",
+      "era": "meta",
+      "complexity": 10,
+      "ui_paradigm": "self_reference",
+      "features": ["configure_configuration", "menu_menu", "setting_settings"],
+      "color_scheme": "recursive_visuals",
+      "next_layer_options": ["final_layer"]
+    },
+    {
+      "id": "final_layer",
+      "name": "The Truth",
+      "era": "conclusion",
+      "complexity": 1,
+      "ui_paradigm": "revelation",
+      "features": ["single_button", "finally_done", "was_it_worth_it"],
+      "color_scheme": "simple_ending",
+      "next_layer_options": []
+    }
+  ],
+  "progression_rules": {
+    "standard_path": [
+      "modern_settings_2020s",
+      "desktop_gui_2000s",
+      "windows_95",
+      "dos_config",
+      "bios_setup",
+      "terminal",
+      "punch_cards",
+      "switch_panel",
+      "final_layer"
+    ],
+    "alternate_paths": {
+      "mobile_branch": [
+        "modern_settings_2020s",
+        "mobile_2015",
+        "webapp_2010s",
+        "desktop_gui_2000s",
+        "windows_95",
+        "dos_config",
+        "bios_setup",
+        "terminal",
+        "punch_cards",
+        "switch_panel",
+        "final_layer"
+      ],
+      "mac_branch": [
+        "modern_settings_2020s",
+        "desktop_gui_2000s",
+        "mac_os_9",
+        "mac_system_7",
+        "bios_setup",
+        "terminal",
+        "punch_cards",
+        "switch_panel",
+        "final_layer"
+      ],
+      "quantum_shortcut": [
+        "modern_settings_2020s",
+        "desktop_gui_2000s",
+        "windows_95",
+        "dos_config",
+        "bios_setup",
+        "quantum_interface",
+        "metaphysical",
+        "recursive_meta",
+        "final_layer"
+      ]
+    },
+    "branching_points": {
+      "desktop_gui_2000s": {
+        "conditions": {
+          "efficiency_high": "windows_95",
+          "efficiency_low": "mac_os_9",
+          "took_too_long": "dos_config"
+        }
+      },
+      "bios_setup": {
+        "conditions": {
+          "found_secret": "quantum_interface",
+          "normal": "terminal"
+        }
+      }
+    }
+  }
+}
