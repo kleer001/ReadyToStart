@@ -1,0 +1,292 @@
+{
+  "categories": [
+    {
+      "id": "audio",
+      "name": "Audio Settings",
+      "complexity": 3,
+      "setting_count_range": [8, 15],
+      "dependency_density": "medium",
+      "theme": "sound_configuration",
+      "subcategories": ["output", "input", "processing", "devices"]
+    },
+    {
+      "id": "graphics",
+      "name": "Graphics Settings",
+      "complexity": 4,
+      "setting_count_range": [12, 20],
+      "dependency_density": "high",
+      "theme": "visual_configuration",
+      "subcategories": ["display", "rendering", "effects", "performance"]
+    },
+    {
+      "id": "network",
+      "name": "Network Settings",
+      "complexity": 5,
+      "setting_count_range": [10, 18],
+      "dependency_density": "high",
+      "theme": "connectivity",
+      "subcategories": ["connection", "protocols", "security", "advanced"]
+    },
+    {
+      "id": "user_profile",
+      "name": "User Profile",
+      "complexity": 2,
+      "setting_count_range": [6, 12],
+      "dependency_density": "low",
+      "theme": "personalization",
+      "subcategories": ["account", "preferences", "privacy"]
+    },
+    {
+      "id": "accessibility",
+      "name": "Accessibility",
+      "complexity": 3,
+      "setting_count_range": [10, 16],
+      "dependency_density": "medium",
+      "theme": "inclusive_design",
+      "subcategories": ["visual", "audio", "input", "cognitive"]
+    },
+    {
+      "id": "security",
+      "name": "Security Settings",
+      "complexity": 5,
+      "setting_count_range": [12, 22],
+      "dependency_density": "very_high",
+      "theme": "protection",
+      "subcategories": ["authentication", "encryption", "permissions", "monitoring"]
+    },
+    {
+      "id": "performance",
+      "name": "Performance Tuning",
+      "complexity": 4,
+      "setting_count_range": [8, 14],
+      "dependency_density": "high",
+      "theme": "optimization",
+      "subcategories": ["cpu", "memory", "disk", "cache"]
+    },
+    {
+      "id": "localization",
+      "name": "Language & Region",
+      "complexity": 2,
+      "setting_count_range": [6, 10],
+      "dependency_density": "low",
+      "theme": "internationalization",
+      "subcategories": ["language", "formatting", "timezone", "currency"]
+    },
+    {
+      "id": "notifications",
+      "name": "Notifications",
+      "complexity": 3,
+      "setting_count_range": [8, 14],
+      "dependency_density": "medium",
+      "theme": "alerts",
+      "subcategories": ["system", "applications", "email", "visual"]
+    },
+    {
+      "id": "power_management",
+      "name": "Power Management",
+      "complexity": 3,
+      "setting_count_range": [7, 12],
+      "dependency_density": "medium",
+      "theme": "energy",
+      "subcategories": ["battery", "sleep", "performance", "thermal"]
+    },
+    {
+      "id": "storage",
+      "name": "Storage Settings",
+      "complexity": 4,
+      "setting_count_range": [10, 16],
+      "dependency_density": "high",
+      "theme": "data_management",
+      "subcategories": ["drives", "backup", "sync", "cleanup"]
+    },
+    {
+      "id": "devices",
+      "name": "Devices & Peripherals",
+      "complexity": 3,
+      "setting_count_range": [9, 15],
+      "dependency_density": "medium",
+      "theme": "hardware",
+      "subcategories": ["input", "output", "wireless", "usb"]
+    },
+    {
+      "id": "updates",
+      "name": "System Updates",
+      "complexity": 4,
+      "setting_count_range": [8, 13],
+      "dependency_density": "high",
+      "theme": "maintenance",
+      "subcategories": ["automatic", "schedule", "rollback", "sources"]
+    },
+    {
+      "id": "privacy",
+      "name": "Privacy Settings",
+      "complexity": 5,
+      "setting_count_range": [14, 24],
+      "dependency_density": "very_high",
+      "theme": "data_protection",
+      "subcategories": ["tracking", "sharing", "analytics", "permissions"]
+    },
+    {
+      "id": "startup",
+      "name": "Startup & Boot",
+      "complexity": 3,
+      "setting_count_range": [7, 11],
+      "dependency_density": "medium",
+      "theme": "initialization",
+      "subcategories": ["boot_order", "programs", "services", "splash"]
+    },
+    {
+      "id": "experimental",
+      "name": "Experimental Features",
+      "complexity": 5,
+      "setting_count_range": [10, 20],
+      "dependency_density": "chaotic",
+      "theme": "bleeding_edge",
+      "subcategories": ["beta", "alpha", "developer", "unstable"]
+    },
+    {
+      "id": "telemetry",
+      "name": "Diagnostics & Telemetry",
+      "complexity": 4,
+      "setting_count_range": [9, 15],
+      "dependency_density": "high",
+      "theme": "monitoring",
+      "subcategories": ["logging", "reporting", "crash_reports", "usage"]
+    },
+    {
+      "id": "cloud_sync",
+      "name": "Cloud Synchronization",
+      "complexity": 4,
+      "setting_count_range": [10, 16],
+      "dependency_density": "high",
+      "theme": "sync",
+      "subcategories": ["files", "settings", "credentials", "conflicts"]
+    },
+    {
+      "id": "gestures",
+      "name": "Gestures & Touch",
+      "complexity": 2,
+      "setting_count_range": [6, 11],
+      "dependency_density": "low",
+      "theme": "input_methods",
+      "subcategories": ["touch", "trackpad", "mouse_gestures", "shortcuts"]
+    },
+    {
+      "id": "appearance",
+      "name": "Appearance & Themes",
+      "complexity": 2,
+      "setting_count_range": [8, 14],
+      "dependency_density": "low",
+      "theme": "aesthetics",
+      "subcategories": ["colors", "fonts", "icons", "wallpaper"]
+    },
+    {
+      "id": "extensions",
+      "name": "Extensions & Plugins",
+      "complexity": 3,
+      "setting_count_range": [7, 12],
+      "dependency_density": "medium",
+      "theme": "modularity",
+      "subcategories": ["installed", "marketplace", "updates", "permissions"]
+    },
+    {
+      "id": "shortcuts",
+      "name": "Keyboard Shortcuts",
+      "complexity": 3,
+      "setting_count_range": [12, 20],
+      "dependency_density": "medium",
+      "theme": "keybindings",
+      "subcategories": ["system", "application", "custom", "conflicts"]
+    },
+    {
+      "id": "search_indexing",
+      "name": "Search & Indexing",
+      "complexity": 3,
+      "setting_count_range": [8, 13],
+      "dependency_density": "medium",
+      "theme": "discovery",
+      "subcategories": ["locations", "file_types", "schedule", "exclusions"]
+    },
+    {
+      "id": "virtualization",
+      "name": "Virtualization",
+      "complexity": 5,
+      "setting_count_range": [10, 17],
+      "dependency_density": "very_high",
+      "theme": "vm_configuration",
+      "subcategories": ["hypervisor", "resources", "networking", "integration"]
+    },
+    {
+      "id": "developer",
+      "name": "Developer Options",
+      "complexity": 5,
+      "setting_count_range": [15, 25],
+      "dependency_density": "very_high",
+      "theme": "development",
+      "subcategories": ["debugging", "profiling", "apis", "tools"]
+    },
+    {
+      "id": "gaming",
+      "name": "Gaming Settings",
+      "complexity": 4,
+      "setting_count_range": [11, 18],
+      "dependency_density": "high",
+      "theme": "gaming_optimization",
+      "subcategories": ["performance", "overlays", "recording", "controller"]
+    },
+    {
+      "id": "backup",
+      "name": "Backup & Restore",
+      "complexity": 4,
+      "setting_count_range": [9, 14],
+      "dependency_density": "high",
+      "theme": "data_safety",
+      "subcategories": ["automatic", "manual", "restore", "verification"]
+    },
+    {
+      "id": "parental_controls",
+      "name": "Parental Controls",
+      "complexity": 4,
+      "setting_count_range": [10, 16],
+      "dependency_density": "high",
+      "theme": "restrictions",
+      "subcategories": ["time_limits", "content", "apps", "reporting"]
+    },
+    {
+      "id": "advanced_system",
+      "name": "Advanced System",
+      "complexity": 5,
+      "setting_count_range": [14, 22],
+      "dependency_density": "very_high",
+      "theme": "system_internals",
+      "subcategories": ["registry", "services", "kernel", "hardware"]
+    },
+    {
+      "id": "legacy_compatibility",
+      "name": "Legacy Compatibility",
+      "complexity": 4,
+      "setting_count_range": [8, 13],
+      "dependency_density": "high",
+      "theme": "backwards_compatibility",
+      "subcategories": ["emulation", "compatibility_modes", "drivers", "apis"]
+    },
+    {
+      "id": "quantum_settings",
+      "name": "Quantum Configuration",
+      "complexity": 5,
+      "setting_count_range": [10, 18],
+      "dependency_density": "paradoxical",
+      "theme": "quantum_computing",
+      "subcategories": ["entanglement", "superposition", "decoherence", "measurement"]
+    },
+    {
+      "id": "meta_settings",
+      "name": "Settings Settings",
+      "complexity": 5,
+      "setting_count_range": [8, 15],
+      "dependency_density": "recursive",
+      "theme": "self_reference",
+      "subcategories": ["menu_behavior", "dependency_rules", "generation", "reality"]
+    }
+  ]
+}
