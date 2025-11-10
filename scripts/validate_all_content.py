@@ -10,6 +10,7 @@ class ContentValidator:
         self.errors = []
         self.warnings = []
         self.stats = {}
+        self.project_root = Path(__file__).parent.parent
 
     def validate_all(self) -> bool:
         self._validate_categories()
@@ -22,7 +23,7 @@ class ContentValidator:
         return self._report_results()
 
     def _validate_categories(self) -> None:
-        filepath = Path("data/menu_categories.json")
+        filepath = self.project_root / "data/menu_categories.json"
         if not filepath.exists():
             self.errors.append("Missing menu_categories.json")
             return
@@ -43,12 +44,12 @@ class ContentValidator:
             self.errors.append(f"Category validation failed: {e}")
 
     def _validate_templates(self) -> None:
-        template_dir = Path("data/setting_templates")
+        template_dir = self.project_root / "data/setting_templates"
         if not template_dir.exists():
             self.errors.append("Missing setting_templates directory")
             return
 
-        categories_file = Path("data/menu_categories.json")
+        categories_file = self.project_root / "data/menu_categories.json"
         if not categories_file.exists():
             return
 
@@ -81,7 +82,7 @@ class ContentValidator:
         self.stats["total_templates"] = template_count
 
     def _validate_madlibs_pools(self) -> None:
-        filepath = Path("data/madlibs_pools.json")
+        filepath = self.project_root / "data/madlibs_pools.json"
         if not filepath.exists():
             self.errors.append("Missing madlibs_pools.json")
             return
@@ -124,7 +125,7 @@ class ContentValidator:
         return count
 
     def _validate_dependency_patterns(self) -> None:
-        filepath = Path("data/dependency_patterns.json")
+        filepath = self.project_root / "data/dependency_patterns.json"
         if not filepath.exists():
             self.errors.append("Missing dependency_patterns.json")
             return
@@ -145,7 +146,7 @@ class ContentValidator:
             self.errors.append(f"Dependency pattern validation failed: {e}")
 
     def _validate_error_messages(self) -> None:
-        filepath = Path("data/error_messages.json")
+        filepath = self.project_root / "data/error_messages.json"
         if not filepath.exists():
             self.errors.append("Missing error_messages.json")
             return
@@ -170,7 +171,7 @@ class ContentValidator:
             self.errors.append(f"Error message validation failed: {e}")
 
     def _validate_hints(self) -> None:
-        filepath = Path("data/hints.json")
+        filepath = self.project_root / "data/hints.json"
         if not filepath.exists():
             self.errors.append("Missing hints.json")
             return
