@@ -37,19 +37,38 @@ class SolvabilityChecker:
     def _check_circular_dependencies(self) -> None:
         graph = self._build_dependency_graph()
 
-        try:
-            cycles = list(nx.simple_cycles(graph))
-            for cycle in cycles:
-                self.issues.append(
-                    SolvabilityIssue(
-                        type="circular_dependency",
-                        description=f"Circular dependency detected: {' -> '.join(cycle + [cycle[0]])}",
-                        affected_items=cycle,
-                        severity="critical",
+        # Find strongly connected components (groups of nodes with cycles)
+        # Report one issue per component instead of every cycle path
+        strongly_connected = list(nx.strongly_connected_components(graph))
+
+        for component in strongly_connected:
+            # Only report if component has more than 1 node (actual cycle)
+            if len(component) > 1:
+                component_list = sorted(list(component))
+                # Find a simple cycle within this component to show as example
+                subgraph = graph.subgraph(component)
+                try:
+                    # Get one representative cycle from this component
+                    cycles = nx.simple_cycles(subgraph)
+                    example_cycle = next(cycles, component_list)
+                    self.issues.append(
+                        SolvabilityIssue(
+                            type="circular_dependency",
+                            description=f"Circular dependency group ({len(component)} settings): {' -> '.join(list(example_cycle) + [list(example_cycle)[0]])}",
+                            affected_items=component_list,
+                            severity="critical",
+                        )
                     )
-                )
-        except nx.NetworkXNoCycle:
-            pass
+                except (StopIteration, nx.NetworkXNoCycle):
+                    # Fallback if we can't find a cycle (shouldn't happen)
+                    self.issues.append(
+                        SolvabilityIssue(
+                            type="circular_dependency",
+                            description=f"Circular dependency group detected with {len(component)} settings",
+                            affected_items=component_list,
+                            severity="critical",
+                        )
+                    )
 
     def _check_impossible_dependencies(self) -> None:
         for setting_id, deps in self.game_state.resolver.dependencies.items():

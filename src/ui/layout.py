@@ -2,6 +2,8 @@ import os
 from configparser import ConfigParser
 from dataclasses import dataclass
 
+from src.ui.renderer import pad_ansi
+
 
 @dataclass
 class Region:
@@ -14,7 +16,7 @@ class Region:
         return self.x <= x < self.x + self.width and self.y <= y < self.y + self.height
 
     def clip_text(self, text: str) -> str:
-        return text[: self.width] if len(text) > self.width else text.ljust(self.width)
+        return pad_ansi(text, self.width)
 
 
 class LayoutManager:
