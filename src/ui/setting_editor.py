@@ -78,7 +78,7 @@ class NumericEditor(TypeEditor):
         stdscr.nodelay(False)  # Blocking input
 
         # Clear and show editing interface
-        stdscr.clear()
+        stdscr.erase()
         y = 0
         stdscr.addstr(y, 0, f"{setting.label}: {self.format_value(current_value)}")
         y += 1
@@ -217,7 +217,7 @@ class StringEditor(TypeEditor):
         curses.echo()  # Show typed characters
 
         # Clear and show editing interface
-        stdscr.clear()
+        stdscr.erase()
         stdscr.addstr(0, 0, f"{setting.label}")
         stdscr.addstr(1, 0, f"Current: {setting.value}")
         stdscr.addstr(2, 0, "Enter new value (or press Enter to keep current): ")

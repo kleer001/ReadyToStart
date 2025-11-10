@@ -674,7 +674,7 @@ Game Status:
         self.stdscr.nodelay(False)  # Blocking input
 
         # Clear and show text
-        self.stdscr.clear()
+        self.stdscr.erase()
         self.stdscr.addstr(0, 0, text)
         self.stdscr.addstr("\nPress Enter to continue...")
         self.stdscr.refresh()
@@ -698,7 +698,7 @@ Game Status:
         curses.curs_set(1)
         self.stdscr.nodelay(False)
 
-        self.stdscr.clear()
+        self.stdscr.erase()
         self.stdscr.addstr(0, 0, "\nAre you sure you want to quit? (y/n): ")
         self.stdscr.refresh()
 
