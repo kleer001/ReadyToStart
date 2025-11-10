@@ -6,6 +6,7 @@ Because what you really wanted was to configure things
 that don't actually do anything. Enjoy.
 """
 
+import random
 import sys
 from pathlib import Path
 
@@ -38,7 +39,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="audio_master_volume",
             type=SettingType.INTEGER,
-            value=50,
+            value=random.randint(0, 100),
             state=SettingState.DISABLED,
             label="Master Volume",
             min_value=0,
@@ -49,7 +50,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="audio_enable",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.DISABLED,
             label="Enable Audio",
         )
@@ -58,7 +59,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="audio_speaker_config",
             type=SettingType.STRING,
-            value="stereo",
+            value=random.choice(["mono", "stereo", "5.1", "7.1"]),
             state=SettingState.LOCKED,
             label="Speaker Configuration",
         )
@@ -67,7 +68,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="audio_3d_sound",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.DISABLED,
             label="3D Audio Processing",
         )
@@ -78,7 +79,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="graphics_resolution",
             type=SettingType.STRING,
-            value="1920x1080",
+            value=random.choice(["640x480", "800x600", "1024x768", "1280x720", "1920x1080", "2560x1440", "3840x2160"]),
             state=SettingState.ENABLED,  # Pre-configured! The only "free" setting
             label="Screen Resolution",
         )
@@ -87,7 +88,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="graphics_vsync",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.DISABLED,
             label="V-Sync",
         )
@@ -96,7 +97,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="graphics_quality",
             type=SettingType.INTEGER,
-            value=3,
+            value=random.randint(1, 5),
             state=SettingState.DISABLED,
             label="Quality Level",
             min_value=1,
@@ -107,7 +108,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="graphics_antialiasing",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.LOCKED,
             label="Anti-Aliasing",
         )
@@ -118,7 +119,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="gameplay_difficulty",
             type=SettingType.INTEGER,
-            value=2,
+            value=random.randint(1, 5),
             state=SettingState.DISABLED,
             label="Difficulty Level",
             min_value=1,
@@ -129,7 +130,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="gameplay_autosave",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.DISABLED,
             label="Auto-Save",
         )
@@ -138,7 +139,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="gameplay_tutorials",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.DISABLED,
             label="Show Tutorials",
         )
@@ -149,7 +150,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="controls_mouse_sensitivity",
             type=SettingType.FLOAT,
-            value=1.0,
+            value=round(random.uniform(0.1, 5.0), 1),
             state=SettingState.DISABLED,
             label="Mouse Sensitivity",
             min_value=0.1,
@@ -160,7 +161,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="controls_invert_y",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.DISABLED,
             label="Invert Y-Axis",
         )
@@ -169,7 +170,7 @@ def create_demo_game() -> GameState:
         Setting(
             id="controls_vibration",
             type=SettingType.BOOLEAN,
-            value=False,
+            value=random.choice([True, False]),
             state=SettingState.LOCKED,
             label="Controller Vibration",
         )
