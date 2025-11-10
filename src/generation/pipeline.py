@@ -14,18 +14,22 @@ MAX_GENERATION_ATTEMPTS = 5
 
 
 class GenerationPipeline:
-    def __init__(self, config_dir: str = "config/"):
+    def __init__(self, config_dir: str = "config/", difficulty=None):
         self.loader = ConfigLoader(config_dir)
-        self.config = self.loader.load_generation_params()
+        self.config = self.loader.load_generation_params(difficulty=difficulty)
         self.wfc_rules = self.loader.load_wfc_rules()
         self.templates = self.loader.load_templates()
 
         self.madlibs = MadLibsEngine(self.templates, self.loader)
         self.compiler = SettingCompiler(self.config, self.madlibs)
 
-    def generate(self, seed: int | None = None) -> GameState:
+    def generate(self, seed: int | None = None, difficulty=None) -> GameState:
         if seed is not None:
             random.seed(seed)
+
+        # Update difficulty if specified
+        if difficulty is not None:
+            self.config = self.loader.load_generation_params(difficulty=difficulty)
 
         for attempt in range(MAX_GENERATION_ATTEMPTS):
             try:
