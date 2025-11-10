@@ -9,9 +9,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.generation.pipeline import GenerationPipeline
 from src.testing.balance_tuner import BalanceTuner
 from src.testing.difficulty_analyzer import DifficultyAnalyzer
-from src.testing.playtest_interface import PlaytestInterface
+from src.testing.playtest_session import PlaytestTracker
 from src.testing.session_reviewer import SessionReviewer
 from src.testing.solvability_checker import SolvabilityChecker
+from src.ui.main_loop import UILoop
 
 
 class PlaytestMenu:
@@ -96,14 +97,34 @@ Type 'help' at any time for assistance.
 
             print("\nReady to start playtesting!")
             print("You'll be able to manually play through the game.")
+            print("Playtest mode includes:")
+            print("  • Session tracking and metrics")
+            print("  • Live stats display (press 't' during game)")
+            print("  • Auto-save on victory")
             input("\nPress Enter to begin...")
 
-            interface = PlaytestInterface(game_state, seed=seed)
-            interface.run_gameplay_loop()
+            # Create session tracker for playtest mode
+            tracker = PlaytestTracker(seed=seed)
 
+            # Launch game with tracking enabled
+            config_dir = Path(__file__).parent.parent / "config"
+            ui_loop = UILoop(
+                game_state,
+                str(config_dir),
+                session_tracker=tracker,
+                show_live_stats=True,
+                seed=seed,
+            )
+
+            # Set first menu as current
+            if game_state.menus:
+                first_menu_id = list(game_state.menus.keys())[0]
+                ui_loop.start(first_menu_id)
+
+            # Show post-game analysis
             print("\nWould you like to see the full analysis? (y/n): ", end="")
             if input().strip().lower() == "y":
-                interface.show_final_analysis()
+                self._show_analysis(game_state, tracker, checker, analyzer)
                 input("\nPress Enter to continue...")
 
         except Exception as e:
@@ -333,15 +354,14 @@ QUICK START GUIDE
 
 DURING GAMEPLAY
 ---------------
-  [number] - Toggle setting or navigate to menu
-  l        - List all settings
-  m        - Show available menus
-  h        - Show hints for locked settings
-  s        - Session statistics
-  p        - Progress report
-  save     - Save and continue
-  exit     - Save and exit
-  help     - Show help
+  ↑↓/ws/jk - Navigate between settings
+  ←/a      - Go back to previous menu
+  →/d      - Navigate to next menu
+  Enter    - Select/edit current setting
+  h        - Show help
+  t        - Show session statistics (playtest mode)
+  :        - Enter command mode for advanced features
+  q        - Quit game
 
 TIPS FOR TESTERS
 ----------------
@@ -359,6 +379,20 @@ DOCUMENTATION
         """)
 
         input("\nPress Enter to continue...")
+
+    def _show_analysis(self, game_state, tracker, checker, analyzer) -> None:
+        """Show comprehensive post-game analysis."""
+        self.clear_screen()
+        self.print_header("PLAYTEST ANALYSIS")
+
+        print("\nSOLVABILITY:")
+        print(checker.get_report())
+
+        print("\n\nDIFFICULTY:")
+        print(analyzer.get_report())
+
+        print("\n\nSESSION SUMMARY:")
+        print(tracker.get_summary())
 
     def run(self) -> None:
         self.show_welcome()

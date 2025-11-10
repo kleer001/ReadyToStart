@@ -224,12 +224,17 @@ def main():
 
         ui_loop.start("audio")
 
+        # Ensure terminal is restored on successful exit
+        print("\n\nThanks for playing!")
+
     except KeyboardInterrupt:
         print("\n\nGame interrupted. Your settings remain unsaved. Forever.")
         sys.exit(0)
     except Exception as e:
         print(f"\n\nFatal error: {e}")
         print("The game has crashed. Ironically fitting for a settings menu.")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 

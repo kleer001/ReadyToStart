@@ -1,6 +1,7 @@
 import sys
 import tty
 import termios
+from contextlib import contextmanager
 
 
 class Key:
@@ -16,6 +17,44 @@ class Key:
 class KeyboardReader:
     def __init__(self):
         self.is_unix = sys.platform != "win32"
+        self.raw_mode_active = False
+        self.old_settings = None
+
+    def enable_raw_mode(self):
+        """Enable raw mode for the terminal."""
+        if not self.is_unix or self.raw_mode_active:
+            return
+        try:
+            fd = sys.stdin.fileno()
+            self.old_settings = termios.tcgetattr(fd)
+            tty.setraw(fd)
+            self.raw_mode_active = True
+        except Exception:
+            pass
+
+    def disable_raw_mode(self):
+        """Disable raw mode and restore normal terminal settings."""
+        if not self.is_unix or not self.raw_mode_active:
+            return
+        try:
+            fd = sys.stdin.fileno()
+            if self.old_settings:
+                termios.tcsetattr(fd, termios.TCSADRAIN, self.old_settings)
+            self.raw_mode_active = False
+        except Exception:
+            pass
+
+    @contextmanager
+    def normal_mode(self):
+        """Context manager to temporarily disable raw mode."""
+        was_active = self.raw_mode_active
+        if was_active:
+            self.disable_raw_mode()
+        try:
+            yield
+        finally:
+            if was_active:
+                self.enable_raw_mode()
 
     def read_key(self) -> str | None:
         if self.is_unix:
@@ -24,10 +63,10 @@ class KeyboardReader:
             return self._read_key_windows()
 
     def _read_key_unix(self) -> str | None:
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
+        if not self.raw_mode_active:
+            self.enable_raw_mode()
+
         try:
-            tty.setraw(fd)
             ch = sys.stdin.read(1)
 
             if ch == "\x1b":
@@ -65,8 +104,8 @@ class KeyboardReader:
                 return Key.RIGHT
             else:
                 return ch
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        except Exception:
+            return None
 
     def _read_key_windows(self) -> str | None:
         try:
