@@ -45,7 +45,8 @@ def show_intro():
     print()
     print("Press 'h' for help once you're in the game.")
     print()
-    input("Press Enter to begin your journey into configuration hell...")
+    print("Press space bar to start...")
+    input()
     print()
 
 

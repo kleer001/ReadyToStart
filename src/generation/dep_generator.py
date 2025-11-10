@@ -90,6 +90,11 @@ class DependencyGenerator:
             return
 
         target_setting = successor_menu.settings[0]
+
+        # Check if adding this dependency would create a cycle
+        if self._would_create_cycle(deps, source_setting_id, target_setting.id):
+            return
+
         if target_setting.id not in deps:
             deps[target_setting.id] = []
         deps[target_setting.id].append(

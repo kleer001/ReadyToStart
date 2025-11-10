@@ -3,7 +3,7 @@ from configparser import ConfigParser
 from src.core.enums import SettingState
 from src.core.menu import MenuNode
 from src.ui.indicators import StateIndicator
-from src.ui.renderer import Component, TextRenderer
+from src.ui.renderer import Component, TextRenderer, pad_ansi
 
 
 class MenuDisplay(Component):
@@ -57,9 +57,9 @@ class MenuDisplay(Component):
                 line = line[:width - 4]
 
                 if idx == selected_index:
-                    line = self.renderer.colorize(line.ljust(width - 2), "cyan", bold=True)
+                    line = self.renderer.colorize(pad_ansi(line, width - 2), "cyan", bold=True)
                 else:
-                    line = line.ljust(width - 2)
+                    line = pad_ansi(line, width - 2)
 
                 content_lines.append(line)
 
@@ -67,7 +67,7 @@ class MenuDisplay(Component):
             content_lines.append("---")
             connection_names = ", ".join(self.menu.connections)
             available_text = f" Available Menus: {connection_names}"
-            content_lines.append(available_text[:width - 2].ljust(width - 2))
+            content_lines.append(pad_ansi(available_text[:width - 2], width - 2))
 
         box_lines = self.renderer.render_box(content_lines, width, border_style)
         return "\n".join(box_lines)
