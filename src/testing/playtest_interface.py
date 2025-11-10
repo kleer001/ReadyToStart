@@ -66,30 +66,45 @@ class PlaytestInterface:
         print()
 
     def show_settings(self) -> None:
-        settings = self.simulator.get_available_settings()
         menu = self.simulator.get_current_menu()
 
         if not menu:
             return
 
-        locked_settings = [s for s in menu.settings if s.state == SettingState.LOCKED]
+        # Get ALL settings including locked ones
+        visible_settings = [s for s in menu.settings if s.state != SettingState.HIDDEN]
 
         print("SETTINGS:")
         self.print_separator()
 
-        if settings:
-            for i, setting in enumerate(settings, 1):
-                status = "ON" if setting.state == SettingState.ENABLED else "OFF"
-                marker = "[X]" if setting.state == SettingState.ENABLED else "[ ]"
-                print(f"{i}. {marker} {setting.label} ({status})")
-        else:
-            print("No available settings in this menu")
+        if visible_settings:
+            for i, setting in enumerate(visible_settings, 1):
+                # State indicator
+                if setting.state == SettingState.LOCKED:
+                    marker = "[LOCK]"
+                    status = "LOCKED"
+                elif setting.state == SettingState.ENABLED:
+                    marker = "[X]"
+                    status = "ENABLED"
+                else:
+                    marker = "[ ]"
+                    status = "DISABLED"
 
-        if locked_settings:
-            print()
-            print("LOCKED SETTINGS:")
-            for setting in locked_settings:
-                print(f"  [LOCKED] {setting.label}")
+                # Type and value display
+                type_abbrev = {
+                    'bool': 'bool',
+                    'int': 'int',
+                    'float': 'float',
+                    'string': 'str'
+                }.get(setting.type.value, setting.type.value)
+
+                value_str = str(setting.value)
+                if len(value_str) > 30:
+                    value_str = value_str[:27] + "..."
+
+                print(f"{i}. {marker} {setting.label}: {value_str} ({type_abbrev}) [{status}]")
+        else:
+            print("No settings in this menu")
 
         self.print_separator()
 
@@ -114,7 +129,7 @@ class PlaytestInterface:
 
         help_text = """
 COMMANDS:
-  [number]       - Toggle setting or navigate to menu
+  [number]       - Toggle boolean or edit int/float/string setting
   l              - List all settings in current menu
   m              - Show available menus
   h              - Show hints for locked settings
@@ -128,9 +143,10 @@ COMMANDS:
 
 NAVIGATION:
   - You start in a menu with settings
-  - Toggle settings ON/OFF by entering their number
+  - Boolean settings toggle ON/OFF, others prompt for value
   - Navigate to other menus when they become accessible
   - Some settings are LOCKED until you enable their dependencies
+  - Click locked settings to see unlock requirements
 
 GOAL:
   Enable all settings to win the game!
@@ -140,6 +156,7 @@ TIPS:
   - Watch the live dashboard for progress
   - Check session stats with 's' to identify problems
   - Save often with 'save' command
+  - Each setting shows its type (bool/int/float/str) and current value
         """
         print(help_text)
         input("\nPress Enter to continue...")
@@ -279,10 +296,31 @@ TIPS:
                 break
             elif command.isdigit():
                 idx = int(command) - 1
-                settings = self.simulator.get_available_settings()
-                if 0 <= idx < len(settings):
-                    setting = settings[idx]
-                    self.simulator.toggle_setting(setting.id)
+                menu = self.simulator.get_current_menu()
+                if menu:
+                    visible_settings = [s for s in menu.settings if s.state != SettingState.HIDDEN]
+                    if 0 <= idx < len(visible_settings):
+                        setting = visible_settings[idx]
+
+                        # Check if locked and show hints
+                        if setting.state == SettingState.LOCKED:
+                            print(f"\n❌ '{setting.label}' is LOCKED!")
+                            hints = self.simulator.get_hints_for_setting(setting.id)
+                            if hints:
+                                print("To unlock, you need to:")
+                                for hint in hints:
+                                    print(f"  → {hint}")
+                            input("\nPress Enter to continue...")
+                        else:
+                            # For boolean, toggle; for others, prompt for new value
+                            from src.core.enums import SettingType
+                            if setting.type == SettingType.BOOLEAN:
+                                self.simulator.toggle_setting(setting.id)
+                            else:
+                                self.simulator.edit_setting(setting.id)
+                    else:
+                        print("\n❌ Invalid setting number!")
+                        input("Press Enter to continue...")
 
         self.simulator.stop()
 

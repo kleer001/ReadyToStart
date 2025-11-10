@@ -68,6 +68,7 @@ class GameplaySimulator:
         return False
 
     def toggle_setting(self, setting_id: str) -> bool:
+        """Toggle a boolean setting between enabled/disabled."""
         setting = self.game_state.get_setting(setting_id)
         if not setting:
             self.tracker.record_error(f"Setting not found: {setting_id}")
@@ -95,6 +96,91 @@ class GameplaySimulator:
         self.game_state.propagate_changes()
 
         self.tracker.record_setting_interaction(setting_id, "toggle", new_value, True)
+        return True
+
+    def edit_setting(self, setting_id: str) -> bool:
+        """Edit a setting value (for int/float/string types)."""
+        from src.core.enums import SettingType
+
+        setting = self.game_state.get_setting(setting_id)
+        if not setting:
+            self.tracker.record_error(f"Setting not found: {setting_id}")
+            return False
+
+        if setting.state == SettingState.LOCKED:
+            self.tracker.record_setting_interaction(
+                setting_id, "edit_locked", None, False
+            )
+            return False
+
+        print(f"\nEdit: {setting.label} ({setting.type.value})")
+        print(f"Current value: {setting.value}")
+
+        if setting.type == SettingType.INTEGER:
+            if setting.min_value is not None and setting.max_value is not None:
+                print(f"Range: {int(setting.min_value)}-{int(setting.max_value)}")
+            try:
+                user_input = input("Enter new value: ").strip()
+                new_value = int(user_input)
+                if setting.min_value is not None and new_value < setting.min_value:
+                    print(f"❌ Value too low! Minimum: {int(setting.min_value)}")
+                    input("Press Enter to continue...")
+                    return False
+                if setting.max_value is not None and new_value > setting.max_value:
+                    print(f"❌ Value too high! Maximum: {int(setting.max_value)}")
+                    input("Press Enter to continue...")
+                    return False
+            except ValueError:
+                print("❌ Invalid integer value!")
+                input("Press Enter to continue...")
+                return False
+
+        elif setting.type == SettingType.FLOAT:
+            if setting.min_value is not None and setting.max_value is not None:
+                print(f"Range: {setting.min_value}-{setting.max_value}")
+            try:
+                user_input = input("Enter new value: ").strip()
+                new_value = float(user_input)
+                if setting.min_value is not None and new_value < setting.min_value:
+                    print(f"❌ Value too low! Minimum: {setting.min_value}")
+                    input("Press Enter to continue...")
+                    return False
+                if setting.max_value is not None and new_value > setting.max_value:
+                    print(f"❌ Value too high! Maximum: {setting.max_value}")
+                    input("Press Enter to continue...")
+                    return False
+            except ValueError:
+                print("❌ Invalid float value!")
+                input("Press Enter to continue...")
+                return False
+
+        elif setting.type == SettingType.STRING:
+            user_input = input("Enter new value: ").strip()
+            if not user_input:
+                print("❌ String cannot be empty!")
+                input("Press Enter to continue...")
+                return False
+            new_value = user_input
+
+        else:
+            print(f"❌ Unsupported type: {setting.type}")
+            input("Press Enter to continue...")
+            return False
+
+        # Update setting
+        setting.value = new_value
+        setting.visit_count += 1
+        setting.last_modified = time.time()
+
+        # Mark as enabled if it was disabled
+        if setting.state == SettingState.DISABLED:
+            setting.state = SettingState.ENABLED
+
+        self.game_state.propagate_changes()
+
+        self.tracker.record_setting_interaction(setting_id, "edit", new_value, True)
+        print(f"✓ Updated to: {new_value}")
+        input("Press Enter to continue...")
         return True
 
     def get_progress(self) -> dict:
