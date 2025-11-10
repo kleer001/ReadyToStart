@@ -20,6 +20,19 @@ from src.ui.main_loop import UILoop
 def create_demo_game() -> GameState:
     game_state = GameState()
 
+    # MAIN MENU - The core of the game loop
+    # The "Start Game" button is locked and requires all other settings to be configured
+    main_menu = MenuNode(id="main", category="Main Menu")
+    main_menu.add_setting(
+        Setting(
+            id="start_game",
+            type=SettingType.BOOLEAN,
+            value=False,
+            state=SettingState.LOCKED,
+            label="▶ Start Game",
+        )
+    )
+
     audio_menu = MenuNode(id="audio", category="Audio Settings")
     audio_menu.add_setting(
         Setting(
@@ -66,7 +79,7 @@ def create_demo_game() -> GameState:
             id="graphics_resolution",
             type=SettingType.STRING,
             value="1920x1080",
-            state=SettingState.DISABLED,
+            state=SettingState.ENABLED,  # Pre-configured! The only "free" setting
             label="Screen Resolution",
         )
     )
@@ -162,33 +175,179 @@ def create_demo_game() -> GameState:
         )
     )
 
-    audio_menu.connections = ["graphics", "gameplay"]
-    graphics_menu.connections = ["audio", "controls"]
-    gameplay_menu.connections = ["audio", "controls"]
-    controls_menu.connections = ["graphics", "gameplay"]
+    # Main menu connects to all settings menus
+    main_menu.connections = ["audio", "graphics", "gameplay", "controls"]
+    audio_menu.connections = ["main", "graphics", "gameplay"]
+    graphics_menu.connections = ["main", "audio", "controls"]
+    gameplay_menu.connections = ["main", "audio", "controls"]
+    controls_menu.connections = ["main", "graphics", "gameplay"]
 
+    game_state.add_menu(main_menu)
     game_state.add_menu(audio_menu)
     game_state.add_menu(graphics_menu)
     game_state.add_menu(gameplay_menu)
     game_state.add_menu(controls_menu)
 
-    # Add dependencies for locked settings
-    # Speaker Configuration requires audio to be enabled first
+    # COMPLEX WEB OF DEPENDENCIES - Not a straight line!
+    # Creates the frustrating "need X to configure Y, but need Z to configure X" loop
+    # NOTE: Only graphics_resolution is pre-configured (ENABLED). Everything else requires dependencies!
+
+    # Audio dependencies
+    # Master volume needs resolution configured (makes no sense, that's the point)
+    game_state.resolver.add_dependency(
+        "audio_master_volume",
+        SimpleDependency("graphics_resolution", SettingState.ENABLED)
+    )
+
+    # Enable Audio requires master volume to be set first
+    game_state.resolver.add_dependency(
+        "audio_enable",
+        SimpleDependency("audio_master_volume", SettingState.ENABLED)
+    )
+
+    # Speaker Configuration requires audio to be enabled AND difficulty set
     game_state.resolver.add_dependency(
         "audio_speaker_config",
         SimpleDependency("audio_enable", SettingState.ENABLED)
     )
+    game_state.resolver.add_dependency(
+        "audio_speaker_config",
+        SimpleDependency("gameplay_difficulty", SettingState.ENABLED)
+    )
 
-    # Anti-aliasing requires V-Sync to be enabled first
+    # 3D sound requires speaker config AND quality level
+    game_state.resolver.add_dependency(
+        "audio_3d_sound",
+        SimpleDependency("audio_speaker_config", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "audio_3d_sound",
+        SimpleDependency("graphics_quality", SettingState.ENABLED)
+    )
+
+    # Graphics dependencies
+    # V-Sync needs autosave configured (circular-ish dependency fun)
+    game_state.resolver.add_dependency(
+        "graphics_vsync",
+        SimpleDependency("gameplay_autosave", SettingState.ENABLED)
+    )
+
+    # Quality needs mouse sensitivity
+    game_state.resolver.add_dependency(
+        "graphics_quality",
+        SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED)
+    )
+
+    # Anti-aliasing requires V-Sync AND tutorials
     game_state.resolver.add_dependency(
         "graphics_antialiasing",
         SimpleDependency("graphics_vsync", SettingState.ENABLED)
     )
+    game_state.resolver.add_dependency(
+        "graphics_antialiasing",
+        SimpleDependency("gameplay_tutorials", SettingState.ENABLED)
+    )
 
-    # Controller vibration requires Y-axis inversion to be configured
+    # Gameplay dependencies
+    # Difficulty needs resolution (you need to see the difficulty, obviously)
+    game_state.resolver.add_dependency(
+        "gameplay_difficulty",
+        SimpleDependency("graphics_resolution", SettingState.ENABLED)
+    )
+
+    # Autosave needs difficulty set (need to know what to save!)
+    game_state.resolver.add_dependency(
+        "gameplay_autosave",
+        SimpleDependency("gameplay_difficulty", SettingState.ENABLED)
+    )
+
+    # Tutorials needs invert Y configured (must learn controls first!)
+    game_state.resolver.add_dependency(
+        "gameplay_tutorials",
+        SimpleDependency("controls_invert_y", SettingState.ENABLED)
+    )
+
+    # Controls dependencies
+    # Mouse sensitivity needs resolution set (need screen space calibration!)
+    game_state.resolver.add_dependency(
+        "controls_mouse_sensitivity",
+        SimpleDependency("graphics_resolution", SettingState.ENABLED)
+    )
+
+    # Invert Y needs mouse sensitivity set first
+    game_state.resolver.add_dependency(
+        "controls_invert_y",
+        SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED)
+    )
+
+    # Controller vibration requires Y-axis inversion AND audio enabled
     game_state.resolver.add_dependency(
         "controls_vibration",
         SimpleDependency("controls_invert_y", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "controls_vibration",
+        SimpleDependency("audio_enable", SettingState.ENABLED)
+    )
+
+    # THE KEY GAMEPLAY MECHANIC:
+    # Start Game requires ALL other settings to be enabled
+    # This creates the core frustration loop
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("audio_master_volume", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("audio_enable", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("audio_speaker_config", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("audio_3d_sound", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("graphics_resolution", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("graphics_vsync", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("graphics_quality", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("graphics_antialiasing", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("gameplay_difficulty", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("gameplay_autosave", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("gameplay_tutorials", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("controls_invert_y", SettingState.ENABLED)
+    )
+    game_state.resolver.add_dependency(
+        "start_game",
+        SimpleDependency("controls_vibration", SettingState.ENABLED)
     )
 
     return game_state
@@ -222,7 +381,7 @@ def main():
         config_dir = Path(__file__).parent / "config"
         ui_loop = UILoop(game_state, str(config_dir))
 
-        ui_loop.start("audio")
+        ui_loop.start("main")
 
         # Ensure terminal is restored on successful exit
         print("\n\nThanks for playing!")
