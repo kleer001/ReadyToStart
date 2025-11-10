@@ -1179,47 +1179,6 @@ class LayerVictoryCoordinator:
 
 ## Helper Scripts
 
-### Layer Progression Visualizer
-**File:** `scripts/visualize_layers.py`
-```python
-#!/usr/bin/env python3
-"""Visualize layer progression paths"""
-
-import json
-from pathlib import Path
-
-def visualize_progression():
-    with open("data/interface_layers.json") as f:
-        data = json.load(f)
-
-    layers = {layer['id']: layer for layer in data['layers']}
-    standard_path = data['progression_rules']['standard_path']
-
-    print("=== STANDARD PROGRESSION PATH ===\n")
-
-    for i, layer_id in enumerate(standard_path, 1):
-        layer = layers.get(layer_id)
-        if layer:
-            print(f"{i:2d}. {layer['name']:40s} ({layer['era']})")
-            if i < len(standard_path):
-                print("    │")
-                print("    ↓")
-
-    print("\n=== ALTERNATE PATHS ===\n")
-
-    alternate_paths = data['progression_rules'].get('alternate_paths', {})
-    for path_name, path_layers in alternate_paths.items():
-        print(f"\n{path_name}:")
-        for layer_id in path_layers[:5]:  # Show first 5
-            if layer_id != "...":
-                layer = layers.get(layer_id)
-                if layer:
-                    print(f"  → {layer['name']}")
-
-if __name__ == "__main__":
-    visualize_progression()
-```
-
 ### Layer Testing Tool
 **File:** `scripts/test_layer.py`
 ```python

@@ -361,7 +361,6 @@ Seed: 12345
 
 # Or use scripts directly
 python scripts/check_solvability.py --seed 12345 --single
-python scripts/generate_difficulty_report.py --seed 12345 --single
 ```
 
 ### Difficulty Presets
@@ -409,7 +408,8 @@ Test multiple games:
 
 ```bash
 python scripts/check_solvability.py --seed 1000 --count 50
-python scripts/generate_difficulty_report.py --seed 1000 --count 50 --output report.json
+
+# For difficulty analysis, use playtest.py interactively with specific seeds
 ```
 
 ### Exporting Data

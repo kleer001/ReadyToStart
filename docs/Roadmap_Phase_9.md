@@ -1020,48 +1020,6 @@ if __name__ == "__main__":
     check_multiple_seeds()
 ```
 
-### Difficulty Report Generator
-**File:** `scripts/generate_difficulty_report.py`
-```python
-#!/usr/bin/env python3
-"""Generate difficulty analysis for multiple seeds"""
-
-from ready_to_start.generation.pipeline import GenerationPipeline
-from ready_to_start.testing.difficulty_analyzer import DifficultyAnalyzer
-import statistics
-
-def generate_report(num_seeds: int = 50):
-    pipeline = GenerationPipeline()
-
-    difficulties = []
-
-    for seed in range(num_seeds):
-        game_state = pipeline.generate(seed=seed)
-        analyzer = DifficultyAnalyzer(game_state)
-        metrics = analyzer.analyze()
-        difficulty = analyzer.calculate_difficulty_score(metrics)
-        difficulties.append(difficulty)
-
-    print("\n=== DIFFICULTY REPORT ===\n")
-    print(f"Analyzed {num_seeds} generated games\n")
-    print(f"Average Difficulty: {statistics.mean(difficulties):.1f}/100")
-    print(f"Min Difficulty: {min(difficulties):.1f}/100")
-    print(f"Max Difficulty: {max(difficulties):.1f}/100")
-    print(f"Std Deviation: {statistics.stdev(difficulties):.1f}")
-
-    # Distribution
-    ranges = [(0, 25), (25, 50), (50, 75), (75, 100)]
-    print("\nDistribution:")
-    for low, high in ranges:
-        count = sum(1 for d in difficulties if low <= d < high)
-        percentage = (count / num_seeds) * 100
-        bar = "█" * int(percentage / 5)
-        print(f"  {low:3d}-{high:3d}: {bar:20s} {count:3d} ({percentage:.1f}%)")
-
-if __name__ == "__main__":
-    generate_report()
-```
-
 ### Balance Adjustment Tool
 **File:** `scripts/adjust_balance.py`
 ```python

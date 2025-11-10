@@ -775,34 +775,6 @@ if __name__ == "__main__":
     test_generation()
 ```
 
-### Graph Visualizer
-**File:** `scripts/visualize_graph.py`
-```python
-#!/usr/bin/env python3
-import networkx as nx
-import matplotlib.pyplot as plt
-from generation.pipeline import GenerationPipeline
-
-def visualize_generation(seed: int = 42):
-    pipeline = GenerationPipeline()
-    state = pipeline.generate(seed=seed)
-    
-    # Build nx graph from state
-    G = nx.DiGraph()
-    for menu_id, menu in state.menus.items():
-        G.add_node(menu_id, category=menu.category)
-        for conn in menu.connections:
-            G.add_edge(menu_id, conn)
-    
-    pos = nx.spring_layout(G)
-    nx.draw(G, pos, with_labels=True, node_color='lightblue')
-    plt.savefig(f"graph_seed_{seed}.png")
-    print(f"Saved graph_seed_{seed}.png")
-
-if __name__ == "__main__":
-    visualize_generation()
-```
-
 ---
 
 ## Libraries Summary
@@ -814,7 +786,6 @@ if __name__ == "__main__":
 
 **Development:**
 - networkx (graph operations)
-- matplotlib (visualization only)
 
 ---
 

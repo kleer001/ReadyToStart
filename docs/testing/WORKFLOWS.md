@@ -29,8 +29,9 @@ Common workflows for testing Ready to Start games.
 # 1. Check solvability
 python scripts/check_solvability.py --seed 12345 --single
 
-# 2. Check difficulty
-python scripts/generate_difficulty_report.py --seed 12345 --single
+# 2. Use playtest tool for difficulty analysis
+python scripts/playtest.py
+# (Interactive - generate with seed 12345, view difficulty metrics)
 
 # 3. Review output
 # ✓ = good, ✗ = needs attention
@@ -138,8 +139,7 @@ python scripts/playtest.py
 # Solvability check
 python scripts/check_solvability.py --seed 1000 --count 50
 
-# Difficulty analysis
-python scripts/generate_difficulty_report.py --seed 1000 --count 50 --output batch_report.json
+# For difficulty analysis, use playtest.py interactively with each seed
 ```
 
 ### Analyzing Results
@@ -390,11 +390,10 @@ python scripts/playtest.py
 ### Collect Data
 
 ```bash
-# Generate 100 games
-python scripts/generate_difficulty_report.py \
-  --seed 1 \
-  --count 100 \
-  --output data/batch_100.json
+# Check solvability for 100 seeds
+python scripts/check_solvability.py --seed 1 --count 100
+
+# For detailed analysis, use playtest.py interactively
 ```
 
 ### Analyze with Python
@@ -494,21 +493,6 @@ jobs:
       run: |
         python scripts/check_solvability.py --seed 1 --count 20
 
-    - name: Difficulty validation
-      run: |
-        python scripts/generate_difficulty_report.py \
-          --seed 1 --count 20 --output ci_report.json
-
-    - name: Validate difficulty range
-      run: |
-        python -c "
-        import json
-        with open('ci_report.json') as f:
-            data = json.load(f)
-        avg = data['average_score']
-        assert 30 <= avg <= 70, f'Difficulty out of range: {avg}'
-        "
-
     - name: Upload artifacts
       uses: actions/upload-artifact@v2
       with:
@@ -574,20 +558,11 @@ done
 ### Finding Good Seeds
 
 ```bash
-# Generate many, filter by criteria
-python scripts/generate_difficulty_report.py --seed 1 --count 100 --output all.json
+# Check solvability for many seeds
+python scripts/check_solvability.py --seed 1 --count 100
 
-# Filter in Python
-import json
-with open('all.json') as f:
-    data = json.load(f)
-
-good_seeds = [
-    g['seed'] for g in data['games']
-    if g['rating'] == 'medium' and g['overall_score'] between 40 and 50
-]
-
-print("Good seeds:", good_seeds)
+# For difficulty analysis, use playtest.py interactively
+# Test specific seeds that passed solvability
 ```
 
 ### Session Management

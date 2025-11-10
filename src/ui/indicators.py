@@ -2,7 +2,6 @@ import time
 from configparser import ConfigParser
 
 from src.core.enums import SettingState
-from src.ui.renderer import ANSIColor
 
 
 class StateIndicator:
@@ -29,23 +28,21 @@ class StateIndicator:
         return False
 
     def get_indicator(self, state: SettingState) -> str:
+        """Return indicator symbol for a setting state.
+
+        Note: Colors are now handled by the ncurses renderer, not by ANSI codes.
+        This method just returns the plain symbol.
+        """
         if state == SettingState.BLINKING:
             self._should_update_frame()
             if self.frame_counter == 0:
                 symbol = self._get_symbol(SettingState.ENABLED)
-                color = self._get_color(SettingState.ENABLED)
             else:
                 symbol = self._get_symbol(SettingState.DISABLED)
-                color = self._get_color(SettingState.DISABLED)
         else:
             symbol = self._get_symbol(state)
-            color = self._get_color(state)
 
-        if not symbol:
-            return ""
-
-        color_code = ANSIColor.get_color(color)
-        return f"{color_code}{symbol}{ANSIColor.RESET}"
+        return symbol if symbol else ""
 
     def reset_animation(self):
         self.frame_counter = 0
