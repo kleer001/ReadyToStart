@@ -53,6 +53,31 @@ class DifficultyConfig:
             std_dev=std_dev
         )
 
+    @staticmethod
+    def from_layer_complexity(complexity: int, total_settings: int) -> "DifficultyConfig":
+        """Map layer complexity (1-10) to difficulty tier.
+
+        Layer complexity ranges:
+        - 1-4: EASY (first few layers - gentle introduction)
+        - 5-7: MEDIUM (middle layers - moderate challenge)
+        - 8-10: HARD (final layers - maximum complexity)
+
+        Args:
+            complexity: Layer complexity value (1-10)
+            total_settings: Total number of settings
+
+        Returns:
+            DifficultyConfig for the appropriate tier
+        """
+        if complexity <= 4:
+            tier = DifficultyTier.EASY
+        elif complexity <= 7:
+            tier = DifficultyTier.MEDIUM
+        else:
+            tier = DifficultyTier.HARD
+
+        return DifficultyConfig.for_tier(tier, total_settings)
+
 
 @dataclass
 class GenerationConfig:
