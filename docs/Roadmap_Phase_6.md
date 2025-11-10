@@ -1288,65 +1288,6 @@ class ErrorMessageSelector:
 
 ## Helper Scripts
 
-### Content Statistics
-**File:** `scripts/content_stats.py`
-```python
-#!/usr/bin/env python3
-"""Generate statistics about content coverage"""
-
-import json
-from pathlib import Path
-
-def analyze_content():
-    # Count categories
-    with open("data/menu_categories.json") as f:
-        categories = json.load(f)['categories']
-    print(f"Categories: {len(categories)}")
-
-    # Count templates
-    template_dir = Path("data/setting_templates")
-    template_count = len(list(template_dir.glob("*.json")))
-    print(f"Template files: {template_count}")
-
-    # Count word pool entries
-    with open("data/madlibs_pools.json") as f:
-        pools = json.load(f)
-
-    total_words = 0
-    for pool_type, pool_data in pools['global_pools'].items():
-        if isinstance(pool_data, dict):
-            for subpool in pool_data.values():
-                total_words += len(subpool)
-        else:
-            total_words += len(pool_data)
-
-    print(f"Mad Libs word pool entries: {total_words}")
-
-    # Count error messages
-    with open("data/error_messages.json") as f:
-        errors = json.load(f)
-
-    error_count = sum(
-        len(cat['messages'])
-        for cat in errors['error_categories'].values()
-    )
-    print(f"Error messages: {error_count}")
-
-    # Count hints
-    with open("data/hints.json") as f:
-        hints = json.load(f)
-
-    hint_count = sum(
-        len(hints)
-        for hints in hints['hint_categories'].values()
-        for hints in hints.values()
-    )
-    print(f"Hint messages: {hint_count}")
-
-if __name__ == "__main__":
-    analyze_content()
-```
-
 ### Content Validator
 **File:** `scripts/validate_all_content.py`
 ```python
