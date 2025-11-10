@@ -38,9 +38,22 @@ class MenuDisplay(Component):
         else:
             for idx, setting in enumerate(visible_settings):
                 indicator = self.indicator.get_indicator(setting.state)
-                state_label = f"({setting.state.value})"
+
+                # Format value display based on type
+                type_abbrev = {
+                    'bool': 'bool',
+                    'int': 'int',
+                    'float': 'float',
+                    'string': 'str'
+                }.get(setting.type.value, setting.type.value)
+
+                value_str = str(setting.value)
+                if len(value_str) > 20:
+                    value_str = value_str[:17] + "..."
+
+                state_label = f"[{setting.state.value}]"
                 cursor = ">" if idx == selected_index else " "
-                line = f"{cursor}{idx + 1}. {indicator} {setting.label} {state_label}"
+                line = f"{cursor}{idx + 1}. {indicator} {setting.label}: {value_str} ({type_abbrev}) {state_label}"
                 line = line[:width - 4]
 
                 if idx == selected_index:

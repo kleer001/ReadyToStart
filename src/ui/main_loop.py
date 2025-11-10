@@ -25,6 +25,7 @@ class UILoop:
         self.navigation = NavigationController(game_state)
         self.message_display = MessageDisplay(f"{config_dir}/messages.ini")
         self.setting_editor = SettingEditor()
+        self.setting_editor.set_keyboard(self.keyboard)
 
         self.progress_bars = []
         self.last_frame_time = time.time()
@@ -53,7 +54,11 @@ class UILoop:
             return
 
         self.running = True
-        self.run()
+        self.keyboard.enable_raw_mode()
+        try:
+            self.run()
+        finally:
+            self.keyboard.disable_raw_mode()
 
     def stop(self):
         self.running = False
@@ -441,8 +446,9 @@ Command Mode:
   quit / q         - Exit game
   ESC              - Return to navigation mode
 """
-        print(help_text)
-        input("Press Enter to continue...")
+        with self.keyboard.normal_mode():
+            print(help_text)
+            input("Press Enter to continue...")
 
     def _handle_status(self):
         total_menus = len(self.game_state.menus)
@@ -464,8 +470,9 @@ Game Status:
   Settings enabled: {enabled_settings}/{total_settings}
   Progress: {progress:.1f}%
 """
-        print(status_text)
-        input("Press Enter to continue...")
+        with self.keyboard.normal_mode():
+            print(status_text)
+            input("Press Enter to continue...")
 
     def _handle_history(self):
         history = self.navigation.get_command_history()
@@ -473,13 +480,15 @@ Game Status:
             self.message_display.add_message("No command history", MessageType.INFO)
             return
 
-        print("\nCommand History:")
-        for i, cmd in enumerate(history, 1):
-            print(f"  {i}. {cmd}")
-        input("Press Enter to continue...")
+        with self.keyboard.normal_mode():
+            print("\nCommand History:")
+            for i, cmd in enumerate(history, 1):
+                print(f"  {i}. {cmd}")
+            input("Press Enter to continue...")
 
     def _handle_quit(self):
-        print("\nAre you sure you want to quit? (y/n): ", end="")
-        response = input().strip().lower()
-        if response in ["y", "yes"]:
-            self.stop()
+        with self.keyboard.normal_mode():
+            print("\nAre you sure you want to quit? (y/n): ", end="")
+            response = input().strip().lower()
+            if response in ["y", "yes"]:
+                self.stop()

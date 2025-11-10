@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from src.core.enums import SettingType
 from src.core.types import Setting
+
+if TYPE_CHECKING:
+    from src.ui.keyboard import KeyboardReader
 
 
 class EditorResult:
@@ -13,6 +16,12 @@ class EditorResult:
 
 
 class TypeEditor(ABC):
+    def __init__(self):
+        self.keyboard = None
+
+    def set_keyboard(self, keyboard: "KeyboardReader"):
+        self.keyboard = keyboard
+
     @abstractmethod
     def edit(self, setting: Setting) -> EditorResult:
         pass
@@ -24,11 +33,17 @@ class TypeEditor(ABC):
 
 class BooleanEditor(TypeEditor):
     def edit(self, setting: Setting) -> EditorResult:
-        print(f"\nEdit: {setting.label} (boolean)")
-        print(f"Current value: {setting.value}")
-        print("Enter 'true' or 'false' (or 't'/'f'): ", end="")
-
-        user_input = input().strip().lower()
+        if self.keyboard and hasattr(self.keyboard, 'normal_mode'):
+            with self.keyboard.normal_mode():
+                print(f"\nEdit: {setting.label} (boolean)")
+                print(f"Current value: {setting.value}")
+                print("Enter 'true' or 'false' (or 't'/'f'): ", end="")
+                user_input = input().strip().lower()
+        else:
+            print(f"\nEdit: {setting.label} (boolean)")
+            print(f"Current value: {setting.value}")
+            print("Enter 'true' or 'false' (or 't'/'f'): ", end="")
+            user_input = input().strip().lower()
 
         if user_input in ["true", "t", "1", "yes", "y"]:
             value = True
@@ -47,14 +62,21 @@ class BooleanEditor(TypeEditor):
 
 class IntegerEditor(TypeEditor):
     def edit(self, setting: Setting) -> EditorResult:
-        print(f"\nEdit: {setting.label} (integer)")
-        print(f"Current value: {setting.value}")
-
-        if setting.min_value is not None and setting.max_value is not None:
-            print(f"Range: {int(setting.min_value)}-{int(setting.max_value)}")
-
-        print("Enter new value: ", end="")
-        user_input = input().strip()
+        if self.keyboard and hasattr(self.keyboard, 'normal_mode'):
+            with self.keyboard.normal_mode():
+                print(f"\nEdit: {setting.label} (integer)")
+                print(f"Current value: {setting.value}")
+                if setting.min_value is not None and setting.max_value is not None:
+                    print(f"Range: {int(setting.min_value)}-{int(setting.max_value)}")
+                print("Enter new value: ", end="")
+                user_input = input().strip()
+        else:
+            print(f"\nEdit: {setting.label} (integer)")
+            print(f"Current value: {setting.value}")
+            if setting.min_value is not None and setting.max_value is not None:
+                print(f"Range: {int(setting.min_value)}-{int(setting.max_value)}")
+            print("Enter new value: ", end="")
+            user_input = input().strip()
 
         try:
             value = int(user_input)
@@ -80,14 +102,21 @@ class IntegerEditor(TypeEditor):
 
 class FloatEditor(TypeEditor):
     def edit(self, setting: Setting) -> EditorResult:
-        print(f"\nEdit: {setting.label} (float)")
-        print(f"Current value: {setting.value}")
-
-        if setting.min_value is not None and setting.max_value is not None:
-            print(f"Range: {setting.min_value}-{setting.max_value}")
-
-        print("Enter new value: ", end="")
-        user_input = input().strip()
+        if self.keyboard and hasattr(self.keyboard, 'normal_mode'):
+            with self.keyboard.normal_mode():
+                print(f"\nEdit: {setting.label} (float)")
+                print(f"Current value: {setting.value}")
+                if setting.min_value is not None and setting.max_value is not None:
+                    print(f"Range: {setting.min_value}-{setting.max_value}")
+                print("Enter new value: ", end="")
+                user_input = input().strip()
+        else:
+            print(f"\nEdit: {setting.label} (float)")
+            print(f"Current value: {setting.value}")
+            if setting.min_value is not None and setting.max_value is not None:
+                print(f"Range: {setting.min_value}-{setting.max_value}")
+            print("Enter new value: ", end="")
+            user_input = input().strip()
 
         try:
             value = float(user_input)
@@ -113,11 +142,17 @@ class FloatEditor(TypeEditor):
 
 class StringEditor(TypeEditor):
     def edit(self, setting: Setting) -> EditorResult:
-        print(f"\nEdit: {setting.label} (string)")
-        print(f"Current value: {setting.value}")
-        print("Enter new value: ", end="")
-
-        value = input().strip()
+        if self.keyboard and hasattr(self.keyboard, 'normal_mode'):
+            with self.keyboard.normal_mode():
+                print(f"\nEdit: {setting.label} (string)")
+                print(f"Current value: {setting.value}")
+                print("Enter new value: ", end="")
+                value = input().strip()
+        else:
+            print(f"\nEdit: {setting.label} (string)")
+            print(f"Current value: {setting.value}")
+            print("Enter new value: ", end="")
+            value = input().strip()
 
         if self.validate(value, setting):
             return EditorResult(True, value=value)
@@ -135,6 +170,12 @@ class SettingEditor:
             SettingType.FLOAT: FloatEditor(),
             SettingType.STRING: StringEditor(),
         }
+        self.keyboard = None
+
+    def set_keyboard(self, keyboard: "KeyboardReader"):
+        self.keyboard = keyboard
+        for editor in self.editors.values():
+            editor.set_keyboard(keyboard)
 
     def edit_setting(self, setting: Setting) -> EditorResult:
         editor = self.editors.get(setting.type)
