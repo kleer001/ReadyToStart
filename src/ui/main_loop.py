@@ -14,10 +14,22 @@ from src.ui.setting_editor import SettingEditor
 
 
 class UILoop:
-    def __init__(self, game_state: GameState, config_dir: str):
+    def __init__(
+        self,
+        game_state: GameState,
+        config_dir: str,
+        session_tracker=None,
+        show_live_stats: bool = False,
+        seed: int | None = None,
+    ):
         self.game_state = game_state
         self.config_dir = config_dir
         self.running = False
+        self.seed = seed
+
+        # Optional playtest tracking
+        self.session_tracker = session_tracker
+        self.show_live_stats = show_live_stats
 
         self.renderer = TextRenderer()
         self.input_handler = InputHandler()
@@ -53,12 +65,20 @@ class UILoop:
             print(f"Failed to start: {error}")
             return
 
+        # Track initial menu visit if tracking enabled
+        if self.session_tracker:
+            self.session_tracker.record_menu_visit(start_menu_id)
+
         self.running = True
         self.keyboard.enable_raw_mode()
         try:
             self.run()
         finally:
             self.keyboard.disable_raw_mode()
+            # Complete session tracking if enabled
+            if self.session_tracker:
+                is_complete = self._check_victory()
+                self.session_tracker.complete_session(completed=is_complete)
 
     def stop(self):
         self.running = False
@@ -96,8 +116,24 @@ class UILoop:
             for msg in self.ui_state.pop("fake_messages", []):
                 self.message_display.add_message(msg["text"], MessageType.ERROR)
 
+        # Check for stuck state if tracking
+        if self.session_tracker:
+            if self.session_tracker.check_stuck():
+                self.message_display.add_message(
+                    "Warning: No progress for 60s - consider checking hints (h)",
+                    MessageType.WARNING
+                )
+
+        # Check for victory
+        if self._check_victory():
+            self._handle_victory()
+
     def _render(self):
         self.renderer.clear_screen()
+
+        # Show live stats header if enabled
+        if self.show_live_stats and self.session_tracker:
+            self._render_live_stats()
 
         if self.navigation.current_menu:
             from src.ui.indicators import StateIndicator
@@ -127,7 +163,11 @@ class UILoop:
 
         print()
         if self.navigation_mode:
-            print("Nav: ↑↓/ws/jk=move ←→/ad=menu Enter=select :=cmd h=help q=quit")
+            nav_hint = "Nav: ↑↓/ws/jk=move ←→/ad=menu Enter=select :=cmd h=help"
+            if self.session_tracker:
+                nav_hint += " t=stats"
+            nav_hint += " q=quit"
+            print(nav_hint)
         else:
             print("Command mode (ESC to return to navigation) > ", end="")
 
@@ -160,6 +200,8 @@ class UILoop:
             self._handle_quit()
         elif key.lower() == "h":
             self._handle_help()
+        elif key.lower() == "t" and self.session_tracker:
+            self._handle_show_session_stats()
 
     def _navigate_to_first_connection(self):
         if (
@@ -174,12 +216,19 @@ class UILoop:
         if success:
             self.selected_index = 0
             self.anti_pattern_engine.increment_counter("menu_visits")
+
+            # Track menu visit if tracking enabled
+            if self.session_tracker:
+                self.session_tracker.record_menu_visit(first_connection)
+
             self.message_display.add_message(
                 f"Navigated to {self.navigation.current_menu.category}",
                 MessageType.SUCCESS,
             )
         else:
             self.message_display.add_message(error, MessageType.ERROR)
+            if self.session_tracker:
+                self.session_tracker.record_error(error)
 
     def _move_selection(self, direction: int):
         if not self.navigation.current_menu:
@@ -269,10 +318,21 @@ class UILoop:
                 self.anti_pattern_engine.increment_counter("settings_enabled")
 
             self.game_state.propagate_changes()
+
+            # Track setting interaction if tracking enabled
+            if self.session_tracker:
+                self.session_tracker.record_setting_interaction(
+                    setting.id, "edit", result.value, True
+                )
+
             self.message_display.add_message(
                 f"Updated {setting.label} to {result.value}", MessageType.SUCCESS
             )
         else:
+            if self.session_tracker:
+                self.session_tracker.record_setting_interaction(
+                    setting.id, "edit", None, False
+                )
             self.message_display.add_message(result.error, MessageType.ERROR)
 
     def _process_command_input(self):
@@ -392,10 +452,21 @@ class UILoop:
                 self.anti_pattern_engine.increment_counter("settings_enabled")
 
             self.game_state.propagate_changes()
+
+            # Track setting interaction if tracking enabled
+            if self.session_tracker:
+                self.session_tracker.record_setting_interaction(
+                    setting.id, "edit", result.value, True
+                )
+
             self.message_display.add_message(
                 f"Updated {setting.label} to {result.value}", MessageType.SUCCESS
             )
         else:
+            if self.session_tracker:
+                self.session_tracker.record_setting_interaction(
+                    setting.id, "edit", None, False
+                )
             self.message_display.add_message(result.error, MessageType.ERROR)
 
     def _handle_goto(self, command):
@@ -492,3 +563,74 @@ Game Status:
             response = input().strip().lower()
             if response in ["y", "yes"]:
                 self.stop()
+
+    def _check_victory(self) -> bool:
+        """Check if all settings are enabled."""
+        total_settings = sum(len(m.settings) for m in self.game_state.menus.values())
+        enabled_settings = sum(
+            sum(1 for s in m.settings if s.state == SettingState.ENABLED)
+            for m in self.game_state.menus.values()
+        )
+        return enabled_settings == total_settings and total_settings > 0
+
+    def _handle_victory(self):
+        """Handle victory condition - called once when all settings are enabled."""
+        if hasattr(self, '_victory_handled'):
+            return  # Only handle once
+        self._victory_handled = True
+
+        self.message_display.add_message(
+            "🎉 VICTORY! All settings enabled! 🎉",
+            MessageType.SUCCESS
+        )
+
+        # Save session if tracking
+        if self.session_tracker:
+            from pathlib import Path
+            sessions_dir = Path("playtest_sessions")
+            sessions_dir.mkdir(exist_ok=True)
+            filepath = sessions_dir / f"session_{self.session_tracker.metrics.session_id}.json"
+            self.session_tracker.save(str(filepath))
+            self.message_display.add_message(
+                f"Session saved to {filepath}",
+                MessageType.SUCCESS
+            )
+
+    def _render_live_stats(self):
+        """Render live session statistics at the top of the screen."""
+        if not self.session_tracker:
+            return
+
+        total_settings = sum(len(m.settings) for m in self.game_state.menus.values())
+        enabled_settings = sum(
+            sum(1 for s in m.settings if s.state == SettingState.ENABLED)
+            for m in self.game_state.menus.values()
+        )
+        progress_pct = (enabled_settings / total_settings * 100) if total_settings > 0 else 0
+
+        total_menus = len(self.game_state.menus)
+        visited_menus = sum(1 for m in self.game_state.menus.values() if m.visited)
+
+        metrics = self.session_tracker.metrics
+        duration = time.time() - metrics.start_time
+
+        print("=" * 70)
+        print(f" PLAYTEST - Seed: {self.seed or 'Random'} | Session: {metrics.session_id[:8]}")
+        print("-" * 70)
+        print(f" Settings: {enabled_settings}/{total_settings} ({progress_pct:.1f}%) | Menus: {visited_menus}/{total_menus}")
+        print(f" Actions: {metrics.total_interactions} | Duration: {duration:.1f}s")
+        print("=" * 70)
+        print()
+
+    def _handle_show_session_stats(self):
+        """Show detailed session statistics."""
+        if not self.session_tracker:
+            return
+
+        with self.keyboard.normal_mode():
+            self.renderer.clear_screen()
+            print("=" * 70)
+            print("SESSION STATISTICS".center(70))
+            print("=" * 70)
+            print(self.session_tracker.get_summary())
+            input("\nPress Enter to continue...")

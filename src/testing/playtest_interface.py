@@ -1,3 +1,12 @@
+"""
+DEPRECATED: The gameplay functionality of PlaytestInterface has been consolidated
+into UILoop (src/ui/main_loop.py). Use UILoop with session_tracker parameter instead.
+
+This module is kept for analysis-only features and backward compatibility.
+For new code, use:
+    - UILoop for all gameplay (with optional session tracking)
+    - SolvabilityChecker/DifficultyAnalyzer for analysis directly
+"""
 import json
 import os
 from pathlib import Path
