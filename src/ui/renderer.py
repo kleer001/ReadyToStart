@@ -1,33 +1,42 @@
-import os
-import re
-import sys
+import curses
 from abc import ABC, abstractmethod
 
 
-class ANSIColor:
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
-
-    BLACK = "\033[30m"
-    RED = "\033[31m"
-    GREEN = "\033[32m"
-    YELLOW = "\033[33m"
-    BLUE = "\033[34m"
-    MAGENTA = "\033[35m"
-    CYAN = "\033[36m"
-    WHITE = "\033[37m"
-
-    BG_BLACK = "\033[40m"
-    BG_RED = "\033[41m"
-    BG_GREEN = "\033[42m"
-    BG_YELLOW = "\033[43m"
-    BG_BLUE = "\033[44m"
-    BG_MAGENTA = "\033[45m"
-    BG_CYAN = "\033[46m"
-    BG_WHITE = "\033[47m"
+class CursesColor:
+    """Color pair constants for ncurses."""
+    # Color pair IDs (initialized in setup_colors)
+    DEFAULT = 0
+    RED = 1
+    GREEN = 2
+    YELLOW = 3
+    BLUE = 4
+    MAGENTA = 5
+    CYAN = 6
+    WHITE = 7
+    BLACK = 8
 
     @classmethod
-    def get_color(cls, name: str) -> str:
+    def setup_colors(cls):
+        """Initialize ncurses color pairs."""
+        if not curses.has_colors():
+            return
+
+        curses.start_color()
+        curses.use_default_colors()
+
+        # Initialize color pairs (foreground, background)
+        curses.init_pair(cls.RED, curses.COLOR_RED, -1)
+        curses.init_pair(cls.GREEN, curses.COLOR_GREEN, -1)
+        curses.init_pair(cls.YELLOW, curses.COLOR_YELLOW, -1)
+        curses.init_pair(cls.BLUE, curses.COLOR_BLUE, -1)
+        curses.init_pair(cls.MAGENTA, curses.COLOR_MAGENTA, -1)
+        curses.init_pair(cls.CYAN, curses.COLOR_CYAN, -1)
+        curses.init_pair(cls.WHITE, curses.COLOR_WHITE, -1)
+        curses.init_pair(cls.BLACK, curses.COLOR_BLACK, -1)
+
+    @classmethod
+    def get_color(cls, name: str) -> int:
+        """Get color pair ID by name."""
         color_map = {
             "red": cls.RED,
             "green": cls.GREEN,
@@ -38,108 +47,193 @@ class ANSIColor:
             "white": cls.WHITE,
             "black": cls.BLACK,
         }
-        return color_map.get(name.lower(), "")
-
-
-ANSI_PATTERN = re.compile(r'\x1b\[[0-9;]*m')
-
-
-def strip_ansi(text: str) -> str:
-    return ANSI_PATTERN.sub('', text)
-
-
-def visible_length(text: str) -> int:
-    return len(strip_ansi(text))
-
-
-def truncate_ansi(text: str, width: int) -> str:
-    visible = 0
-    result = []
-    i = 0
-
-    while i < len(text) and visible < width:
-        match = ANSI_PATTERN.match(text, i)
-        if match:
-            result.append(match.group())
-            i = match.end()
-        else:
-            result.append(text[i])
-            visible += 1
-            i += 1
-
-    if ANSI_PATTERN.search(text):
-        result.append(ANSIColor.RESET)
-
-    return ''.join(result)
-
-
-def pad_ansi(text: str, width: int) -> str:
-    current = visible_length(text)
-
-    if current > width:
-        return truncate_ansi(text, width)
-
-    return text + ' ' * (width - current)
+        return color_map.get(name.lower(), cls.DEFAULT)
 
 
 class Component(ABC):
     @abstractmethod
-    def render(self) -> str:
+    def render(self, window) -> None:
+        """Render component to an ncurses window."""
         pass
 
 
 class TextRenderer:
-    def __init__(self):
-        self.buffer = []
+    """ncurses-based text renderer."""
+
+    def __init__(self, stdscr=None):
+        self.stdscr = stdscr
+        self.colors_initialized = False
+
+    def set_screen(self, stdscr):
+        """Set the curses screen."""
+        self.stdscr = stdscr
+        if not self.colors_initialized:
+            CursesColor.setup_colors()
+            self.colors_initialized = True
 
     def clear_screen(self):
-        os.system("cls" if os.name == "nt" else "clear")
+        """Clear the screen."""
+        if self.stdscr:
+            self.stdscr.clear()
 
-    def add(self, text: str):
-        self.buffer.append(text)
+    def refresh(self):
+        """Refresh the screen to show changes."""
+        if self.stdscr:
+            self.stdscr.refresh()
 
-    def colorize(self, text: str, color: str, bold: bool = False) -> str:
-        if not color:
-            return text
+    def addstr(self, y: int, x: int, text: str, color: str = "", bold: bool = False):
+        """Add a string at position (y, x) with optional color and bold."""
+        if not self.stdscr:
+            return
 
-        result = ""
-        if bold:
-            result += ANSIColor.BOLD
-        result += ANSIColor.get_color(color)
-        result += text
-        result += ANSIColor.RESET
-        return result
+        try:
+            attr = 0
+            if bold:
+                attr |= curses.A_BOLD
+            if color:
+                color_pair = CursesColor.get_color(color)
+                attr |= curses.color_pair(color_pair)
 
-    def render(self):
-        output = "\n".join(self.buffer)
-        print(output, end="")
-        sys.stdout.flush()
-        self.buffer.clear()
+            if attr:
+                self.stdscr.addstr(y, x, text, attr)
+            else:
+                self.stdscr.addstr(y, x, text)
+        except curses.error:
+            # Ignore errors from writing outside screen bounds
+            pass
 
-    def render_box(self, content: list[str], width: int, style: str = "double") -> list[str]:
+    def get_screen_size(self) -> tuple[int, int]:
+        """Get screen size as (height, width)."""
+        if self.stdscr:
+            return self.stdscr.getmaxyx()
+        return (24, 80)  # Default fallback
+
+    def render_box(self, y: int, x: int, height: int, width: int,
+                   content: list[str], style: str = "double") -> int:
+        """
+        Render a box with content at position (y, x).
+        Returns the number of lines rendered.
+        """
+        if not self.stdscr:
+            return 0
+
+        if style == "double":
+            # Unicode double-line box characters
+            top_left, top_right = "╔", "╗"
+            bottom_left, bottom_right = "╚", "╝"
+            horizontal, vertical = "═", "║"
+            divider_left, divider_right = "╠", "╣"
+        else:
+            # Unicode single-line box characters
+            top_left, top_right = "┌", "┐"
+            bottom_left, bottom_right = "└", "┘"
+            horizontal, vertical = "─", "│"
+            divider_left, divider_right = "├", "┤"
+
+        inner_width = width - 2
+
+        try:
+            # Top border
+            self.stdscr.addstr(y, x, top_left + horizontal * inner_width + top_right)
+            current_y = y + 1
+
+            # Content lines
+            for line in content:
+                if current_y >= y + height - 1:
+                    break
+
+                if line == "---":
+                    # Divider line
+                    self.stdscr.addstr(current_y, x, divider_left + horizontal * inner_width + divider_right)
+                else:
+                    # Content line - truncate/pad to fit
+                    display_text = line[:inner_width].ljust(inner_width)
+                    self.stdscr.addstr(current_y, x, vertical + display_text + vertical)
+                current_y += 1
+
+            # Bottom border
+            if current_y < y + height:
+                self.stdscr.addstr(current_y, x, bottom_left + horizontal * inner_width + bottom_right)
+                current_y += 1
+
+        except curses.error:
+            pass
+
+        return current_y - y
+
+    def render_box_with_colors(self, y: int, x: int, height: int, width: int,
+                               content: list[tuple[str, str, bool]], style: str = "double") -> int:
+        """
+        Render a box with colored content.
+        content is list of (text, color, bold) tuples.
+        Returns the number of lines rendered.
+        """
+        if not self.stdscr:
+            return 0
+
         if style == "double":
             top_left, top_right = "╔", "╗"
             bottom_left, bottom_right = "╚", "╝"
             horizontal, vertical = "═", "║"
-            divider_left, divider_right, divider_cross = "╠", "╣", "╬"
+            divider_left, divider_right = "╠", "╣"
         else:
             top_left, top_right = "┌", "┐"
             bottom_left, bottom_right = "└", "┘"
             horizontal, vertical = "─", "│"
-            divider_left, divider_right, divider_cross = "├", "┤", "┼"
+            divider_left, divider_right = "├", "┤"
 
         inner_width = width - 2
-        lines = []
 
-        lines.append(top_left + horizontal * inner_width + top_right)
+        try:
+            # Top border
+            self.stdscr.addstr(y, x, top_left + horizontal * inner_width + top_right)
+            current_y = y + 1
 
-        for line in content:
-            if line == "---":
-                lines.append(divider_left + horizontal * inner_width + divider_right)
-            else:
-                padded = pad_ansi(line, inner_width)
-                lines.append(vertical + padded + vertical)
+            # Content lines
+            for item in content:
+                if current_y >= y + height - 1:
+                    break
 
-        lines.append(bottom_left + horizontal * inner_width + bottom_right)
+                if isinstance(item, str):
+                    # Simple string (for backward compatibility)
+                    text, color, bold = item, "", False
+                else:
+                    # Tuple of (text, color, bold)
+                    text, color, bold = item
 
-        return lines
+                if text == "---":
+                    # Divider line
+                    self.stdscr.addstr(current_y, x, divider_left + horizontal * inner_width + divider_right)
+                else:
+                    # Left border
+                    self.stdscr.addstr(current_y, x, vertical)
+
+                    # Content with color
+                    display_text = text[:inner_width].ljust(inner_width)
+
+                    attr = 0
+                    if bold:
+                        attr |= curses.A_BOLD
+                    if color:
+                        color_pair = CursesColor.get_color(color)
+                        attr |= curses.color_pair(color_pair)
+
+                    if attr:
+                        self.stdscr.addstr(current_y, x + 1, display_text, attr)
+                    else:
+                        self.stdscr.addstr(current_y, x + 1, display_text)
+
+                    # Right border
+                    self.stdscr.addstr(current_y, x + width - 1, vertical)
+
+                current_y += 1
+
+            # Bottom border
+            if current_y < y + height:
+                self.stdscr.addstr(current_y, x, bottom_left + horizontal * inner_width + bottom_right)
+                current_y += 1
+
+        except curses.error:
+            pass
+
+        return current_y - y

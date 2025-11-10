@@ -1,11 +1,9 @@
+import curses
 from abc import ABC, abstractmethod
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 from src.core.enums import SettingType
 from src.core.types import Setting
-
-if TYPE_CHECKING:
-    from src.ui.keyboard import KeyboardReader
 
 
 class EditorResult:
@@ -17,13 +15,10 @@ class EditorResult:
 
 class TypeEditor(ABC):
     def __init__(self):
-        self.keyboard = None
-
-    def set_keyboard(self, keyboard: "KeyboardReader"):
-        self.keyboard = keyboard
+        self.stdscr = None
 
     @abstractmethod
-    def edit(self, setting: Setting) -> EditorResult:
+    def edit(self, setting: Setting, stdscr) -> EditorResult:
         pass
 
     @abstractmethod
@@ -32,7 +27,7 @@ class TypeEditor(ABC):
 
 
 class BooleanEditor(TypeEditor):
-    def edit(self, setting: Setting) -> EditorResult:
+    def edit(self, setting: Setting, stdscr) -> EditorResult:
         # Just toggle the boolean instantly - no confirmation needed!
         value = not setting.value
 
@@ -67,91 +62,84 @@ class NumericEditor(TypeEditor):
         """Adjust value by step * delta, clamped to bounds."""
         raise NotImplementedError
 
-    def _show_header(self, setting: Setting, current_value: Any, min_val: Any, max_val: Any):
-        """Display editing header with instructions."""
-        print(f"\n{setting.label}: {self.format_value(current_value)}")
-        if setting.min_value is not None and setting.max_value is not None:
-            print(f"Range: {self.format_value(min_val)}-{self.format_value(max_val)}")
-        step_text = f"by {self.format_value(self.step)}" if self.step != 1 else ""
-        print(f"Use ↑/↓ to adjust{' ' + step_text if step_text else ''}, or type a number, then press Enter")
+    def _is_valid_input_char(self, char: str, buffer: str) -> bool:
+        """Check if character is valid for numeric input."""
+        raise NotImplementedError
 
-    def _display_value(self, value: Any):
-        """Update the displayed value in-place."""
-        print(f"\rValue: {self.format_value(value)}  ", end="", flush=True)
-
-    def _handle_typed_input(self, input_buffer: str, min_val: Any, max_val: Any) -> Any | None:
-        """Parse and validate typed input. Returns value or None if invalid."""
-        try:
-            typed_value = self.parse_input(input_buffer)
-            if min_val <= typed_value <= max_val:
-                return typed_value
-        except ValueError:
-            pass
-        return None
-
-    def edit(self, setting: Setting) -> EditorResult:
-        from src.ui.keyboard import Key
-
-        if not self.keyboard:
-            return EditorResult(False, error="No keyboard available")
+    def edit(self, setting: Setting, stdscr) -> EditorResult:
+        if not stdscr:
+            return EditorResult(False, error="No screen available")
 
         current_value = self.parse_input(str(setting.value))
         min_val, max_val = self.get_bounds(setting)
 
-        # Show header in normal mode
-        with self.keyboard.normal_mode():
-            self._show_header(setting, current_value, min_val, max_val)
-            self._display_value(current_value)
+        # Save screen state and configure for modal input
+        curses.curs_set(1)  # Show cursor
+        stdscr.nodelay(False)  # Blocking input
 
-        # Interactive editing in raw mode
-        self.keyboard.enable_raw_mode()
+        # Clear and show editing interface
+        stdscr.clear()
+        y = 0
+        stdscr.addstr(y, 0, f"{setting.label}: {self.format_value(current_value)}")
+        y += 1
+
+        if setting.min_value is not None and setting.max_value is not None:
+            stdscr.addstr(y, 0, f"Range: {self.format_value(min_val)}-{self.format_value(max_val)}")
+            y += 1
+
+        step_text = f"by {self.format_value(self.step)}" if self.step != 1 else ""
+        stdscr.addstr(y, 0, f"Use ↑/↓ to adjust{' ' + step_text if step_text else ''}, or type a number, then press Enter")
+        y += 2
+
+        value_y = y
         input_buffer = ""
 
         while True:
-            key = self.keyboard.read_key()
-            if not key:
-                continue
+            # Display current value or buffer
+            display = input_buffer if input_buffer else self.format_value(current_value)
+            stdscr.move(value_y, 0)
+            stdscr.clrtoeol()
+            stdscr.addstr(value_y, 0, f"Value: {display}")
+            if input_buffer:
+                stdscr.addstr("_")
+            stdscr.refresh()
 
-            if key == Key.UP:
+            # Read key
+            ch = stdscr.getch()
+
+            if ch == curses.KEY_UP:
+                input_buffer = ""
                 current_value = self.adjust_value(current_value, 1, min_val, max_val)
-                with self.keyboard.normal_mode():
-                    self._display_value(current_value)
-                self.keyboard.enable_raw_mode()
-            elif key == Key.DOWN:
+            elif ch == curses.KEY_DOWN:
+                input_buffer = ""
                 current_value = self.adjust_value(current_value, -1, min_val, max_val)
-                with self.keyboard.normal_mode():
-                    self._display_value(current_value)
-                self.keyboard.enable_raw_mode()
-            elif key == Key.ENTER:
+            elif ch == ord('\n') or ch == ord('\r'):
                 if input_buffer:
-                    typed_value = self._handle_typed_input(input_buffer, min_val, max_val)
-                    if typed_value is not None:
-                        current_value = typed_value
+                    try:
+                        typed_value = self.parse_input(input_buffer)
+                        if min_val <= typed_value <= max_val:
+                            current_value = typed_value
+                    except ValueError:
+                        pass
                 break
-            elif key == Key.ESC:
+            elif ch == 27:  # ESC
+                curses.curs_set(0)
+                stdscr.nodelay(True)
                 return EditorResult(False, error="Cancelled")
-            elif self._is_valid_input_char(key, input_buffer):
-                input_buffer += key
-                with self.keyboard.normal_mode():
-                    print(f"\rValue: {input_buffer}_  ", end="", flush=True)
-                self.keyboard.enable_raw_mode()
-            elif key == Key.BACKSPACE and input_buffer:
+            elif ch in (curses.KEY_BACKSPACE, 127, 8) and input_buffer:
                 input_buffer = input_buffer[:-1]
-                display = input_buffer if input_buffer else self.format_value(current_value)
-                with self.keyboard.normal_mode():
-                    print(f"\rValue: {display}_  ", end="", flush=True)
-                self.keyboard.enable_raw_mode()
+            elif 0 <= ch < 256:
+                char = chr(ch)
+                if self._is_valid_input_char(char, input_buffer):
+                    input_buffer += char
 
-        with self.keyboard.normal_mode():
-            print()  # New line after editing
+        # Restore screen state
+        curses.curs_set(0)  # Hide cursor
+        stdscr.nodelay(True)  # Non-blocking input
 
         if self.validate(current_value, setting):
             return EditorResult(True, value=current_value)
         return EditorResult(False, error="Value out of range")
-
-    def _is_valid_input_char(self, char: str, buffer: str) -> bool:
-        """Check if character is valid for numeric input."""
-        raise NotImplementedError
 
 
 class IntegerEditor(NumericEditor):
@@ -219,23 +207,32 @@ class FloatEditor(NumericEditor):
 
 
 class StringEditor(TypeEditor):
-    def edit(self, setting: Setting) -> EditorResult:
-        # For strings, use normal input mode
-        if self.keyboard and hasattr(self.keyboard, 'normal_mode'):
-            with self.keyboard.normal_mode():
-                print(f"\n{setting.label}")
-                print(f"Current: {setting.value}")
-                print("Enter new value (or press Enter to keep current): ", end="")
-                value = input().strip()
-                if not value:  # If empty, keep current value
-                    value = setting.value
-        else:
-            print(f"\n{setting.label}")
-            print(f"Current: {setting.value}")
-            print("Enter new value (or press Enter to keep current): ", end="")
-            value = input().strip()
-            if not value:  # If empty, keep current value
-                value = setting.value
+    def edit(self, setting: Setting, stdscr) -> EditorResult:
+        if not stdscr:
+            return EditorResult(False, error="No screen available")
+
+        # Save screen state
+        curses.curs_set(1)  # Show cursor
+        stdscr.nodelay(False)  # Blocking input
+        curses.echo()  # Show typed characters
+
+        # Clear and show editing interface
+        stdscr.clear()
+        stdscr.addstr(0, 0, f"{setting.label}")
+        stdscr.addstr(1, 0, f"Current: {setting.value}")
+        stdscr.addstr(2, 0, "Enter new value (or press Enter to keep current): ")
+        stdscr.refresh()
+
+        # Get input
+        value = stdscr.getstr(3, 0, 100).decode('utf-8').strip()
+
+        # Restore screen state
+        curses.noecho()
+        curses.curs_set(0)
+        stdscr.nodelay(True)
+
+        if not value:  # If empty, keep current value
+            value = setting.value
 
         if self.validate(value, setting):
             return EditorResult(True, value=value)
@@ -253,16 +250,10 @@ class SettingEditor:
             SettingType.FLOAT: FloatEditor(),
             SettingType.STRING: StringEditor(),
         }
-        self.keyboard = None
 
-    def set_keyboard(self, keyboard: "KeyboardReader"):
-        self.keyboard = keyboard
-        for editor in self.editors.values():
-            editor.set_keyboard(keyboard)
-
-    def edit_setting(self, setting: Setting) -> EditorResult:
+    def edit_setting(self, setting: Setting, stdscr) -> EditorResult:
         editor = self.editors.get(setting.type)
         if not editor:
             return EditorResult(False, error=f"No editor for type {setting.type}")
 
-        return editor.edit(setting)
+        return editor.edit(setting, stdscr)

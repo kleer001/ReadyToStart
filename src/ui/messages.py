@@ -3,8 +3,6 @@ from collections import deque
 from configparser import ConfigParser
 from enum import Enum
 
-from src.ui.renderer import ANSIColor
-
 
 class MessageType(Enum):
     ERROR = "error"
@@ -66,9 +64,12 @@ class MessageDisplay:
         return lines
 
     def _format_message(self, message: Message) -> str:
-        color_code = ANSIColor.get_color(self._get_color(message.type))
+        """Format message with type label.
+
+        Note: Colors are now handled by ncurses renderer if needed.
+        """
         type_label = f"[{message.type.value.upper()}]"
-        formatted = f"{color_code}{type_label}{ANSIColor.RESET} {message.text}"
+        formatted = f"{type_label} {message.text}"
         return formatted
 
     def update(self):

@@ -1,3 +1,4 @@
+import curses
 import time
 from pathlib import Path
 
@@ -5,12 +6,22 @@ from src.anti_patterns.engine import AntiPatternEngine
 from src.core.enums import SettingState
 from src.core.game_state import GameState
 from src.ui.input_handler import InputHandler
-from src.ui.keyboard import Key, KeyboardReader
 from src.ui.menu_display import MenuDisplay
 from src.ui.messages import MessageDisplay, MessageType
 from src.ui.navigation import NavigationController
 from src.ui.renderer import TextRenderer
 from src.ui.setting_editor import SettingEditor
+
+
+# Key mappings
+class Key:
+    UP = "UP"
+    DOWN = "DOWN"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
+    ENTER = "ENTER"
+    ESC = "ESC"
+    BACKSPACE = "BACKSPACE"
 
 
 class UILoop:
@@ -33,11 +44,9 @@ class UILoop:
 
         self.renderer = TextRenderer()
         self.input_handler = InputHandler()
-        self.keyboard = KeyboardReader()
         self.navigation = NavigationController(game_state)
         self.message_display = MessageDisplay(f"{config_dir}/messages.ini")
         self.setting_editor = SettingEditor()
-        self.setting_editor.set_keyboard(self.keyboard)
 
         self.progress_bars = []
         self.last_frame_time = time.time()
@@ -59,6 +68,8 @@ class UILoop:
                 str(fake_message_config)
             )
 
+        self.stdscr = None
+
     def start(self, start_menu_id: str):
         success, error = self.navigation.navigate_to(start_menu_id)
         if not success:
@@ -70,15 +81,25 @@ class UILoop:
             self.session_tracker.record_menu_visit(start_menu_id)
 
         self.running = True
-        self.keyboard.enable_raw_mode()
         try:
-            self.run()
+            curses.wrapper(self._curses_main)
         finally:
-            self.keyboard.disable_raw_mode()
             # Complete session tracking if enabled
             if self.session_tracker:
                 is_complete = self._check_victory()
                 self.session_tracker.complete_session(completed=is_complete)
+
+    def _curses_main(self, stdscr):
+        """Main curses loop."""
+        self.stdscr = stdscr
+        self.renderer.set_screen(stdscr)
+
+        # Configure curses
+        curses.curs_set(0)  # Hide cursor
+        stdscr.nodelay(True)  # Non-blocking input
+        stdscr.timeout(50)  # 50ms timeout for getch()
+
+        self.run()
 
     def stop(self):
         self.running = False
@@ -131,9 +152,12 @@ class UILoop:
     def _render(self):
         self.renderer.clear_screen()
 
+        current_y = 0
+
         # Show live stats header if enabled
         if self.show_live_stats and self.session_tracker:
-            self._render_live_stats()
+            current_y = self._render_live_stats(current_y)
+            current_y += 1
 
         if self.navigation.current_menu:
             from src.ui.indicators import StateIndicator
@@ -147,29 +171,76 @@ class UILoop:
             )
 
             selected = self.selected_index if self.navigation_mode else -1
-            print(menu_display.render(selected))
+            lines_rendered = menu_display.render(
+                window=self.stdscr,
+                selected_index=selected,
+                start_y=current_y,
+                start_x=0
+            )
+            current_y += lines_rendered
 
+        # Render messages
         messages = self.message_display.get_current_messages()
         if messages:
-            print()
+            current_y += 1
             for msg in messages:
-                print(msg)
+                self.renderer.addstr(current_y, 0, msg)
+                current_y += 1
 
+        # Render progress bars
         if self.progress_bars:
-            print()
+            current_y += 1
             for bar in self.progress_bars:
                 for line in bar.render():
-                    print(line)
+                    self.renderer.addstr(current_y, 0, line)
+                    current_y += 1
 
-        print()
+        # Render navigation hints
+        current_y += 1
         if self.navigation_mode:
             nav_hint = "Nav: ↑↓/ws/jk=move ←→/ad=menu Enter=select :=cmd h=help"
             if self.session_tracker:
                 nav_hint += " t=stats"
             nav_hint += " q=quit"
-            print(nav_hint)
+            self.renderer.addstr(current_y, 0, nav_hint)
         else:
-            print("Command mode (ESC to return to navigation) > ", end="")
+            self.renderer.addstr(current_y, 0, "Command mode (ESC to return to navigation) > ")
+
+        self.renderer.refresh()
+
+    def _render_live_stats(self, start_y: int) -> int:
+        """Render live session statistics at the top of the screen. Returns next y position."""
+        if not self.session_tracker:
+            return start_y
+
+        total_settings = sum(len(m.settings) for m in self.game_state.menus.values())
+        enabled_settings = sum(
+            sum(1 for s in m.settings if s.state == SettingState.ENABLED)
+            for m in self.game_state.menus.values()
+        )
+        progress_pct = (enabled_settings / total_settings * 100) if total_settings > 0 else 0
+
+        total_menus = len(self.game_state.menus)
+        visited_menus = sum(1 for m in self.game_state.menus.values() if m.visited)
+
+        metrics = self.session_tracker.metrics
+        duration = time.time() - metrics.start_time
+
+        y = start_y
+        self.renderer.addstr(y, 0, "=" * 70)
+        y += 1
+        self.renderer.addstr(y, 0, f" PLAYTEST - Seed: {self.seed or 'Random'} | Session: {metrics.session_id[:8]}")
+        y += 1
+        self.renderer.addstr(y, 0, "-" * 70)
+        y += 1
+        self.renderer.addstr(y, 0, f" Settings: {enabled_settings}/{total_settings} ({progress_pct:.1f}%) | Menus: {visited_menus}/{total_menus}")
+        y += 1
+        self.renderer.addstr(y, 0, f" Actions: {metrics.total_interactions} | Duration: {duration:.1f}s")
+        y += 1
+        self.renderer.addstr(y, 0, "=" * 70)
+        y += 1
+
+        return y
 
     def _process_input(self):
         if self.navigation_mode:
@@ -177,8 +248,48 @@ class UILoop:
         else:
             self._process_command_input()
 
+    def _read_key(self) -> str | None:
+        """Read a key from ncurses and convert to our key constants."""
+        if not self.stdscr:
+            return None
+
+        try:
+            ch = self.stdscr.getch()
+            if ch == -1:  # No input
+                return None
+
+            # Handle special keys
+            if ch == curses.KEY_UP:
+                return Key.UP
+            elif ch == curses.KEY_DOWN:
+                return Key.DOWN
+            elif ch == curses.KEY_LEFT:
+                return Key.LEFT
+            elif ch == curses.KEY_RIGHT:
+                return Key.RIGHT
+            elif ch == ord('\n') or ch == ord('\r'):
+                return Key.ENTER
+            elif ch == 27:  # ESC
+                return Key.ESC
+            elif ch == curses.KEY_BACKSPACE or ch == 127 or ch == 8:
+                return Key.BACKSPACE
+            # WASD/HJKL navigation
+            elif ch in [ord('w'), ord('W'), ord('k'), ord('K')]:
+                return Key.UP
+            elif ch in [ord('s'), ord('S'), ord('j'), ord('J')]:
+                return Key.DOWN
+            elif ch in [ord('a'), ord('A'), ord('h'), ord('H')]:
+                return Key.LEFT
+            elif ch in [ord('d'), ord('D'), ord('l'), ord('L')]:
+                return Key.RIGHT
+            else:
+                # Return the character
+                return chr(ch) if 0 <= ch < 256 else None
+        except Exception:
+            return None
+
     def _process_navigation_input(self):
-        key = self.keyboard.read_key()
+        key = self._read_key()
         if not key:
             return
 
@@ -196,11 +307,11 @@ class UILoop:
             self._select_current()
         elif key == ":":
             self.navigation_mode = False
-        elif key.lower() == "q":
+        elif key and key.lower() == "q":
             self._handle_quit()
-        elif key.lower() == "h":
+        elif key and key.lower() == "h" and key != Key.LEFT:
             self._handle_help()
-        elif key.lower() == "t" and self.session_tracker:
+        elif key and key.lower() == "t" and self.session_tracker:
             self._handle_show_session_stats()
 
     def _navigate_to_first_connection(self):
@@ -304,7 +415,7 @@ class UILoop:
                 )
             return
 
-        result = self.setting_editor.edit_setting(setting)
+        result = self.setting_editor.edit_setting(setting, self.stdscr)
 
         if result.success:
             setting.value = result.value
@@ -338,7 +449,7 @@ class UILoop:
     def _process_command_input(self):
         command = self.input_handler.read_command()
         if not command:
-            key = self.keyboard.read_key()
+            key = self._read_key()
             if key == Key.ESC:
                 self.navigation_mode = True
             return
@@ -438,7 +549,7 @@ class UILoop:
                 )
             return
 
-        result = self.setting_editor.edit_setting(setting)
+        result = self.setting_editor.edit_setting(setting, self.stdscr)
 
         if result.success:
             setting.value = result.value
@@ -517,9 +628,7 @@ Command Mode:
   quit / q         - Exit game
   ESC              - Return to navigation mode
 """
-        with self.keyboard.normal_mode():
-            print(help_text)
-            input("Press Enter to continue...")
+        self._show_modal(help_text)
 
     def _handle_status(self):
         total_menus = len(self.game_state.menus)
@@ -541,9 +650,7 @@ Game Status:
   Settings enabled: {enabled_settings}/{total_settings}
   Progress: {progress:.1f}%
 """
-        with self.keyboard.normal_mode():
-            print(status_text)
-            input("Press Enter to continue...")
+        self._show_modal(status_text)
 
     def _handle_history(self):
         history = self.navigation.get_command_history()
@@ -551,18 +658,60 @@ Game Status:
             self.message_display.add_message("No command history", MessageType.INFO)
             return
 
-        with self.keyboard.normal_mode():
-            print("\nCommand History:")
-            for i, cmd in enumerate(history, 1):
-                print(f"  {i}. {cmd}")
-            input("Press Enter to continue...")
+        history_text = "\nCommand History:\n"
+        for i, cmd in enumerate(history, 1):
+            history_text += f"  {i}. {cmd}\n"
+
+        self._show_modal(history_text)
+
+    def _show_modal(self, text: str):
+        """Show a modal dialog with text. Press any key to close."""
+        if not self.stdscr:
+            return
+
+        # Save current screen state
+        curses.curs_set(1)  # Show cursor
+        self.stdscr.nodelay(False)  # Blocking input
+
+        # Clear and show text
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, text)
+        self.stdscr.addstr("\nPress Enter to continue...")
+        self.stdscr.refresh()
+
+        # Wait for input
+        while True:
+            ch = self.stdscr.getch()
+            if ch == ord('\n') or ch == ord('\r'):
+                break
+
+        # Restore screen state
+        curses.curs_set(0)  # Hide cursor
+        self.stdscr.nodelay(True)  # Non-blocking input
 
     def _handle_quit(self):
-        with self.keyboard.normal_mode():
-            print("\nAre you sure you want to quit? (y/n): ", end="")
-            response = input().strip().lower()
-            if response in ["y", "yes"]:
+        if not self.stdscr:
+            self.stop()
+            return
+
+        # Show quit confirmation
+        curses.curs_set(1)
+        self.stdscr.nodelay(False)
+
+        self.stdscr.clear()
+        self.stdscr.addstr(0, 0, "\nAre you sure you want to quit? (y/n): ")
+        self.stdscr.refresh()
+
+        while True:
+            ch = self.stdscr.getch()
+            if ch in [ord('y'), ord('Y')]:
                 self.stop()
+                break
+            elif ch in [ord('n'), ord('N')]:
+                break
+
+        curses.curs_set(0)
+        self.stdscr.nodelay(True)
 
     def _check_victory(self) -> bool:
         """Check if all settings are enabled."""
@@ -580,7 +729,7 @@ Game Status:
         self._victory_handled = True
 
         self.message_display.add_message(
-            "🎉 VICTORY! All settings enabled! 🎉",
+            "VICTORY! All settings enabled!",
             MessageType.SUCCESS
         )
 
@@ -596,41 +745,14 @@ Game Status:
                 MessageType.SUCCESS
             )
 
-    def _render_live_stats(self):
-        """Render live session statistics at the top of the screen."""
-        if not self.session_tracker:
-            return
-
-        total_settings = sum(len(m.settings) for m in self.game_state.menus.values())
-        enabled_settings = sum(
-            sum(1 for s in m.settings if s.state == SettingState.ENABLED)
-            for m in self.game_state.menus.values()
-        )
-        progress_pct = (enabled_settings / total_settings * 100) if total_settings > 0 else 0
-
-        total_menus = len(self.game_state.menus)
-        visited_menus = sum(1 for m in self.game_state.menus.values() if m.visited)
-
-        metrics = self.session_tracker.metrics
-        duration = time.time() - metrics.start_time
-
-        print("=" * 70)
-        print(f" PLAYTEST - Seed: {self.seed or 'Random'} | Session: {metrics.session_id[:8]}")
-        print("-" * 70)
-        print(f" Settings: {enabled_settings}/{total_settings} ({progress_pct:.1f}%) | Menus: {visited_menus}/{total_menus}")
-        print(f" Actions: {metrics.total_interactions} | Duration: {duration:.1f}s")
-        print("=" * 70)
-        print()
-
     def _handle_show_session_stats(self):
         """Show detailed session statistics."""
         if not self.session_tracker:
             return
 
-        with self.keyboard.normal_mode():
-            self.renderer.clear_screen()
-            print("=" * 70)
-            print("SESSION STATISTICS".center(70))
-            print("=" * 70)
-            print(self.session_tracker.get_summary())
-            input("\nPress Enter to continue...")
+        stats_text = "=" * 70 + "\n"
+        stats_text += "SESSION STATISTICS".center(70) + "\n"
+        stats_text += "=" * 70 + "\n"
+        stats_text += self.session_tracker.get_summary()
+
+        self._show_modal(stats_text)
