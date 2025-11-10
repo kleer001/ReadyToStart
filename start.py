@@ -6,6 +6,7 @@ Because what you really wanted was to configure things
 that don't actually do anything. Enjoy.
 """
 
+import curses
 import sys
 from pathlib import Path
 
@@ -30,29 +31,97 @@ def create_game(difficulty: DifficultyTier = DifficultyTier.MEDIUM, seed: int | 
     return pipeline.generate(seed=seed, difficulty=difficulty)
 
 
-def show_intro():
-    print()
-    print("╔═══════════════════════════════════════════════════════════╗")
-    print("║                                                           ║")
-    print("║                    READY TO START                         ║")
-    print("║                                                           ║")
-    print("║          A game about settings menus. Yes, really.        ║")
-    print("║                                                           ║")
-    print("╚═══════════════════════════════════════════════════════════╝")
-    print()
-    print("Your mission: Enable all the settings.")
-    print("Your obstacle: The settings themselves.")
-    print()
-    print("Press 'h' for help once you're in the game.")
-    print()
-    print("Press space bar to start...")
-    input()
-    print()
+def show_main_menu(stdscr):
+    """Show the main menu and return the user's choice.
+
+    Returns:
+        str: 'play' or 'options'
+    """
+    curses.curs_set(0)  # Hide cursor
+    stdscr.nodelay(False)  # Blocking input
+    stdscr.keypad(True)  # Enable arrow keys
+
+    selected = 0
+    menu_items = ["Play", "Options"]
+
+    while True:
+        stdscr.clear()
+        height, width = stdscr.getmaxyx()
+
+        # Title
+        title = "READY TO START"
+        y = height // 2 - 4
+        stdscr.addstr(y, (width - len(title)) // 2, title, curses.A_BOLD)
+
+        # Menu items
+        y += 3
+        for idx, item in enumerate(menu_items):
+            x = width // 2 - 10
+            if idx == selected:
+                stdscr.addstr(y, x, f"> {item} <", curses.A_REVERSE)
+            else:
+                stdscr.addstr(y, x, f"  {item}  ")
+            y += 2
+
+        stdscr.refresh()
+
+        # Handle input
+        key = stdscr.getch()
+
+        if key == curses.KEY_UP or key == ord('w') or key == ord('k'):
+            selected = (selected - 1) % len(menu_items)
+        elif key == curses.KEY_DOWN or key == ord('s') or key == ord('j'):
+            selected = (selected + 1) % len(menu_items)
+        elif key == ord('\n') or key == ord('\r') or key == ord(' '):
+            return menu_items[selected].lower()
+        elif key == ord('q'):
+            sys.exit(0)
+
+
+def show_play_error(stdscr):
+    """Show the error message when trying to play without configuring settings."""
+    stdscr.clear()
+    height, width = stdscr.getmaxyx()
+
+    y = height // 2 - 5
+
+    messages = [
+        "ERROR: Cannot start game",
+        "",
+        "Game requires 'Enable Gameplay' setting to be configured.",
+        "",
+        "Please enable 'Enable Gameplay' in Options first.",
+        "",
+        "",
+        "Press any key to return to menu..."
+    ]
+
+    for msg in messages:
+        if msg:
+            stdscr.addstr(y, (width - len(msg)) // 2, msg)
+        y += 1
+
+    stdscr.refresh()
+    stdscr.getch()  # Wait for keypress
+
+
+def main_menu_loop(stdscr):
+    """Main menu loop - shows menu and handles selection."""
+    while True:
+        choice = show_main_menu(stdscr)
+
+        if choice == "play":
+            # Show error about needing to configure settings
+            show_play_error(stdscr)
+        elif choice == "options":
+            # This is where the actual game starts
+            return
 
 
 def main():
     try:
-        show_intro()
+        # Show main menu first
+        curses.wrapper(main_menu_loop)
 
         # Generate procedural game with medium difficulty
         game_state = create_game(difficulty=DifficultyTier.MEDIUM, seed=None)

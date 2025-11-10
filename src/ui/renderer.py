@@ -74,7 +74,7 @@ class TextRenderer:
     def clear_screen(self):
         """Clear the screen."""
         if self.stdscr:
-            self.stdscr.clear()
+            self.stdscr.erase()
 
     def refresh(self):
         """Refresh the screen to show changes."""
