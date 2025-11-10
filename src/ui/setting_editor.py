@@ -44,26 +44,66 @@ class BooleanEditor(TypeEditor):
         return isinstance(value, bool)
 
 
-class IntegerEditor(TypeEditor):
+class NumericEditor(TypeEditor):
+    """Base class for integer and float editors to eliminate duplication (DRY principle)."""
+
+    def __init__(self):
+        super().__init__()
+        self.step = 1  # Override in subclasses
+
+    def get_bounds(self, setting: Setting) -> tuple[Any, Any]:
+        """Get min/max bounds - subclasses override for type conversion."""
+        raise NotImplementedError
+
+    def format_value(self, value: Any) -> str:
+        """Format value for display - subclasses override."""
+        return str(value)
+
+    def parse_input(self, input_str: str) -> Any:
+        """Parse user input string - subclasses override."""
+        raise NotImplementedError
+
+    def adjust_value(self, current: Any, delta: int, min_val: Any, max_val: Any) -> Any:
+        """Adjust value by step * delta, clamped to bounds."""
+        raise NotImplementedError
+
+    def _show_header(self, setting: Setting, current_value: Any, min_val: Any, max_val: Any):
+        """Display editing header with instructions."""
+        print(f"\n{setting.label}: {self.format_value(current_value)}")
+        if setting.min_value is not None and setting.max_value is not None:
+            print(f"Range: {self.format_value(min_val)}-{self.format_value(max_val)}")
+        step_text = f"by {self.format_value(self.step)}" if self.step != 1 else ""
+        print(f"Use ↑/↓ to adjust{' ' + step_text if step_text else ''}, or type a number, then press Enter")
+
+    def _display_value(self, value: Any):
+        """Update the displayed value in-place."""
+        print(f"\rValue: {self.format_value(value)}  ", end="", flush=True)
+
+    def _handle_typed_input(self, input_buffer: str, min_val: Any, max_val: Any) -> Any | None:
+        """Parse and validate typed input. Returns value or None if invalid."""
+        try:
+            typed_value = self.parse_input(input_buffer)
+            if min_val <= typed_value <= max_val:
+                return typed_value
+        except ValueError:
+            pass
+        return None
+
     def edit(self, setting: Setting) -> EditorResult:
         from src.ui.keyboard import Key
 
         if not self.keyboard:
             return EditorResult(False, error="No keyboard available")
 
-        current_value = setting.value
-        min_val = int(setting.min_value) if setting.min_value is not None else 0
-        max_val = int(setting.max_value) if setting.max_value is not None else 100
+        current_value = self.parse_input(str(setting.value))
+        min_val, max_val = self.get_bounds(setting)
 
-        # Interactive editing with arrow keys
+        # Show header in normal mode
         with self.keyboard.normal_mode():
-            print(f"\n{setting.label}: {current_value}")
-            if setting.min_value is not None and setting.max_value is not None:
-                print(f"Range: {min_val}-{max_val}")
-            print("Use ↑/↓ to adjust, or type a number, then press Enter")
-            print(f"Value: {current_value}", end="", flush=True)
+            self._show_header(setting, current_value, min_val, max_val)
+            self._display_value(current_value)
 
-        # Re-enable raw mode for interactive editing
+        # Interactive editing in raw mode
         self.keyboard.enable_raw_mode()
         input_buffer = ""
 
@@ -73,35 +113,33 @@ class IntegerEditor(TypeEditor):
                 continue
 
             if key == Key.UP:
-                current_value = min(current_value + 1, max_val)
+                current_value = self.adjust_value(current_value, 1, min_val, max_val)
                 with self.keyboard.normal_mode():
-                    print(f"\rValue: {current_value}  ", end="", flush=True)
+                    self._display_value(current_value)
                 self.keyboard.enable_raw_mode()
             elif key == Key.DOWN:
-                current_value = max(current_value - 1, min_val)
+                current_value = self.adjust_value(current_value, -1, min_val, max_val)
                 with self.keyboard.normal_mode():
-                    print(f"\rValue: {current_value}  ", end="", flush=True)
+                    self._display_value(current_value)
                 self.keyboard.enable_raw_mode()
             elif key == Key.ENTER:
                 if input_buffer:
-                    try:
-                        typed_value = int(input_buffer)
-                        if min_val <= typed_value <= max_val:
-                            current_value = typed_value
-                    except ValueError:
-                        pass
+                    typed_value = self._handle_typed_input(input_buffer, min_val, max_val)
+                    if typed_value is not None:
+                        current_value = typed_value
                 break
             elif key == Key.ESC:
                 return EditorResult(False, error="Cancelled")
-            elif key.isdigit() or (key == '-' and not input_buffer):
+            elif self._is_valid_input_char(key, input_buffer):
                 input_buffer += key
                 with self.keyboard.normal_mode():
                     print(f"\rValue: {input_buffer}_  ", end="", flush=True)
                 self.keyboard.enable_raw_mode()
             elif key == Key.BACKSPACE and input_buffer:
                 input_buffer = input_buffer[:-1]
+                display = input_buffer if input_buffer else self.format_value(current_value)
                 with self.keyboard.normal_mode():
-                    print(f"\rValue: {input_buffer or current_value}_  ", end="", flush=True)
+                    print(f"\rValue: {display}_  ", end="", flush=True)
                 self.keyboard.enable_raw_mode()
 
         with self.keyboard.normal_mode():
@@ -110,98 +148,73 @@ class IntegerEditor(TypeEditor):
         if self.validate(current_value, setting):
             return EditorResult(True, value=current_value)
         return EditorResult(False, error="Value out of range")
+
+    def _is_valid_input_char(self, char: str, buffer: str) -> bool:
+        """Check if character is valid for numeric input."""
+        raise NotImplementedError
+
+
+class IntegerEditor(NumericEditor):
+    def __init__(self):
+        super().__init__()
+        self.step = 1
+
+    def get_bounds(self, setting: Setting) -> tuple[int, int]:
+        min_val = int(setting.min_value) if setting.min_value is not None else 0
+        max_val = int(setting.max_value) if setting.max_value is not None else 100
+        return min_val, max_val
+
+    def format_value(self, value: Any) -> str:
+        return str(int(value))
+
+    def parse_input(self, input_str: str) -> int:
+        return int(input_str)
+
+    def adjust_value(self, current: int, delta: int, min_val: int, max_val: int) -> int:
+        return max(min_val, min(max_val, current + delta * self.step))
+
+    def _is_valid_input_char(self, char: str, buffer: str) -> bool:
+        return char.isdigit() or (char == '-' and not buffer)
 
     def validate(self, value: Any, setting: Setting) -> bool:
         if not isinstance(value, int):
             return False
-
         if setting.min_value is not None and value < setting.min_value:
             return False
-
         if setting.max_value is not None and value > setting.max_value:
             return False
-
         return True
 
 
-class FloatEditor(TypeEditor):
-    def edit(self, setting: Setting) -> EditorResult:
-        from src.ui.keyboard import Key
+class FloatEditor(NumericEditor):
+    def __init__(self):
+        super().__init__()
+        self.step = 0.1
 
-        if not self.keyboard:
-            return EditorResult(False, error="No keyboard available")
-
-        current_value = float(setting.value)
+    def get_bounds(self, setting: Setting) -> tuple[float, float]:
         min_val = float(setting.min_value) if setting.min_value is not None else 0.0
         max_val = float(setting.max_value) if setting.max_value is not None else 100.0
-        step = 0.1  # Increment step for arrow keys
+        return min_val, max_val
 
-        # Interactive editing with arrow keys
-        with self.keyboard.normal_mode():
-            print(f"\n{setting.label}: {current_value}")
-            if setting.min_value is not None and setting.max_value is not None:
-                print(f"Range: {min_val}-{max_val}")
-            print("Use ↑/↓ to adjust by 0.1, or type a number, then press Enter")
-            print(f"Value: {current_value:.1f}", end="", flush=True)
+    def format_value(self, value: Any) -> str:
+        return f"{float(value):.1f}"
 
-        # Re-enable raw mode for interactive editing
-        self.keyboard.enable_raw_mode()
-        input_buffer = ""
+    def parse_input(self, input_str: str) -> float:
+        return round(float(input_str), 1)
 
-        while True:
-            key = self.keyboard.read_key()
-            if not key:
-                continue
+    def adjust_value(self, current: float, delta: int, min_val: float, max_val: float) -> float:
+        return max(min_val, min(max_val, round(current + delta * self.step, 1)))
 
-            if key == Key.UP:
-                current_value = min(round(current_value + step, 1), max_val)
-                with self.keyboard.normal_mode():
-                    print(f"\rValue: {current_value:.1f}  ", end="", flush=True)
-                self.keyboard.enable_raw_mode()
-            elif key == Key.DOWN:
-                current_value = max(round(current_value - step, 1), min_val)
-                with self.keyboard.normal_mode():
-                    print(f"\rValue: {current_value:.1f}  ", end="", flush=True)
-                self.keyboard.enable_raw_mode()
-            elif key == Key.ENTER:
-                if input_buffer:
-                    try:
-                        typed_value = float(input_buffer)
-                        if min_val <= typed_value <= max_val:
-                            current_value = round(typed_value, 1)
-                    except ValueError:
-                        pass
-                break
-            elif key == Key.ESC:
-                return EditorResult(False, error="Cancelled")
-            elif key.isdigit() or key in ['.', '-'] or (key == '-' and not input_buffer):
-                input_buffer += key
-                with self.keyboard.normal_mode():
-                    print(f"\rValue: {input_buffer}_  ", end="", flush=True)
-                self.keyboard.enable_raw_mode()
-            elif key == Key.BACKSPACE and input_buffer:
-                input_buffer = input_buffer[:-1]
-                with self.keyboard.normal_mode():
-                    print(f"\rValue: {input_buffer or f'{current_value:.1f}'}_  ", end="", flush=True)
-                self.keyboard.enable_raw_mode()
-
-        with self.keyboard.normal_mode():
-            print()  # New line after editing
-
-        if self.validate(current_value, setting):
-            return EditorResult(True, value=current_value)
-        return EditorResult(False, error="Value out of range")
+    def _is_valid_input_char(self, char: str, buffer: str) -> bool:
+        return char.isdigit() or char in ['.', '-'] and (char != '-' or not buffer)
 
     def validate(self, value: Any, setting: Setting) -> bool:
         if not isinstance(value, (int, float)):
             return False
-
         if setting.min_value is not None and value < setting.min_value:
             return False
-
         if setting.max_value is not None and value > setting.max_value:
             return False
-
         return True
 
 

@@ -18,11 +18,8 @@ from src.core.types import Setting
 from src.ui.main_loop import UILoop
 
 
-def create_demo_game() -> GameState:
-    game_state = GameState()
-
-    # MAIN MENU - The core of the game loop
-    # The "Start Game" button is locked and requires all other settings to be configured
+def _create_main_menu() -> MenuNode:
+    """Create the main menu with the Start Game button."""
     main_menu = MenuNode(id="main", category="Main Menu")
     main_menu.add_setting(
         Setting(
@@ -33,7 +30,11 @@ def create_demo_game() -> GameState:
             label="▶ Start Game",
         )
     )
+    return main_menu
 
+
+def _create_audio_menu() -> MenuNode:
+    """Create audio settings menu with random initial values."""
     audio_menu = MenuNode(id="audio", category="Audio Settings")
     audio_menu.add_setting(
         Setting(
@@ -73,7 +74,11 @@ def create_demo_game() -> GameState:
             label="3D Audio Processing",
         )
     )
+    return audio_menu
 
+
+def _create_graphics_menu() -> MenuNode:
+    """Create graphics settings menu with random initial values."""
     graphics_menu = MenuNode(id="graphics", category="Graphics Settings")
     graphics_menu.add_setting(
         Setting(
@@ -113,7 +118,11 @@ def create_demo_game() -> GameState:
             label="Anti-Aliasing",
         )
     )
+    return graphics_menu
 
+
+def _create_gameplay_menu() -> MenuNode:
+    """Create gameplay settings menu with random initial values."""
     gameplay_menu = MenuNode(id="gameplay", category="Gameplay Settings")
     gameplay_menu.add_setting(
         Setting(
@@ -144,7 +153,11 @@ def create_demo_game() -> GameState:
             label="Show Tutorials",
         )
     )
+    return gameplay_menu
 
+
+def _create_controls_menu() -> MenuNode:
+    """Create controls settings menu with random initial values."""
     controls_menu = MenuNode(id="controls", category="Control Settings")
     controls_menu.add_setting(
         Setting(
@@ -175,181 +188,89 @@ def create_demo_game() -> GameState:
             label="Controller Vibration",
         )
     )
+    return controls_menu
 
-    # Main menu connects to all settings menus
+
+def _setup_menu_connections(
+    main_menu: MenuNode,
+    audio_menu: MenuNode,
+    graphics_menu: MenuNode,
+    gameplay_menu: MenuNode,
+    controls_menu: MenuNode,
+) -> None:
+    """Configure navigation connections between menus."""
     main_menu.connections = ["audio", "graphics", "gameplay", "controls"]
     audio_menu.connections = ["main", "graphics", "gameplay"]
     graphics_menu.connections = ["main", "audio", "controls"]
     gameplay_menu.connections = ["main", "audio", "controls"]
     controls_menu.connections = ["main", "graphics", "gameplay"]
 
+
+def _setup_dependencies(game_state: GameState) -> None:
+    """Configure all setting dependencies to create the gameplay challenge web."""
+    resolver = game_state.resolver
+
+    # Audio dependencies
+    resolver.add_dependency("audio_master_volume", SimpleDependency("graphics_resolution", SettingState.ENABLED))
+    resolver.add_dependency("audio_enable", SimpleDependency("audio_master_volume", SettingState.ENABLED))
+    resolver.add_dependency("audio_speaker_config", SimpleDependency("audio_enable", SettingState.ENABLED))
+    resolver.add_dependency("audio_speaker_config", SimpleDependency("gameplay_difficulty", SettingState.ENABLED))
+    resolver.add_dependency("audio_3d_sound", SimpleDependency("audio_speaker_config", SettingState.ENABLED))
+    resolver.add_dependency("audio_3d_sound", SimpleDependency("graphics_quality", SettingState.ENABLED))
+
+    # Graphics dependencies
+    resolver.add_dependency("graphics_vsync", SimpleDependency("gameplay_autosave", SettingState.ENABLED))
+    resolver.add_dependency("graphics_quality", SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED))
+    resolver.add_dependency("graphics_antialiasing", SimpleDependency("graphics_vsync", SettingState.ENABLED))
+    resolver.add_dependency("graphics_antialiasing", SimpleDependency("gameplay_tutorials", SettingState.ENABLED))
+
+    # Gameplay dependencies
+    resolver.add_dependency("gameplay_difficulty", SimpleDependency("graphics_resolution", SettingState.ENABLED))
+    resolver.add_dependency("gameplay_autosave", SimpleDependency("gameplay_difficulty", SettingState.ENABLED))
+    resolver.add_dependency("gameplay_tutorials", SimpleDependency("controls_invert_y", SettingState.ENABLED))
+
+    # Controls dependencies
+    resolver.add_dependency("controls_mouse_sensitivity", SimpleDependency("graphics_resolution", SettingState.ENABLED))
+    resolver.add_dependency("controls_invert_y", SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED))
+    resolver.add_dependency("controls_vibration", SimpleDependency("controls_invert_y", SettingState.ENABLED))
+    resolver.add_dependency("controls_vibration", SimpleDependency("audio_enable", SettingState.ENABLED))
+
+    # Start Game requires ALL settings
+    for setting_id in [
+        "audio_master_volume", "audio_enable", "audio_speaker_config", "audio_3d_sound",
+        "graphics_resolution", "graphics_vsync", "graphics_quality", "graphics_antialiasing",
+        "gameplay_difficulty", "gameplay_autosave", "gameplay_tutorials",
+        "controls_mouse_sensitivity", "controls_invert_y", "controls_vibration",
+    ]:
+        resolver.add_dependency("start_game", SimpleDependency(setting_id, SettingState.ENABLED))
+
+
+def create_demo_game() -> GameState:
+    """Orchestrate creation of game state with menus and dependencies.
+
+    Follows Single Responsibility Principle by delegating to specialized functions.
+    """
+    game_state = GameState()
+
+    # Create all menus
+    main_menu = _create_main_menu()
+    audio_menu = _create_audio_menu()
+    graphics_menu = _create_graphics_menu()
+    gameplay_menu = _create_gameplay_menu()
+    controls_menu = _create_controls_menu()
+
+    # Setup navigation connections
+    _setup_menu_connections(main_menu, audio_menu, graphics_menu, gameplay_menu, controls_menu)
+
+    # Add menus to game state
     game_state.add_menu(main_menu)
     game_state.add_menu(audio_menu)
     game_state.add_menu(graphics_menu)
     game_state.add_menu(gameplay_menu)
     game_state.add_menu(controls_menu)
 
-    # COMPLEX WEB OF DEPENDENCIES - Not a straight line!
-    # Creates the frustrating "need X to configure Y, but need Z to configure X" loop
-    # NOTE: Only graphics_resolution is pre-configured (ENABLED). Everything else requires dependencies!
-
-    # Audio dependencies
-    # Master volume needs resolution configured (makes no sense, that's the point)
-    game_state.resolver.add_dependency(
-        "audio_master_volume",
-        SimpleDependency("graphics_resolution", SettingState.ENABLED)
-    )
-
-    # Enable Audio requires master volume to be set first
-    game_state.resolver.add_dependency(
-        "audio_enable",
-        SimpleDependency("audio_master_volume", SettingState.ENABLED)
-    )
-
-    # Speaker Configuration requires audio to be enabled AND difficulty set
-    game_state.resolver.add_dependency(
-        "audio_speaker_config",
-        SimpleDependency("audio_enable", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "audio_speaker_config",
-        SimpleDependency("gameplay_difficulty", SettingState.ENABLED)
-    )
-
-    # 3D sound requires speaker config AND quality level
-    game_state.resolver.add_dependency(
-        "audio_3d_sound",
-        SimpleDependency("audio_speaker_config", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "audio_3d_sound",
-        SimpleDependency("graphics_quality", SettingState.ENABLED)
-    )
-
-    # Graphics dependencies
-    # V-Sync needs autosave configured (circular-ish dependency fun)
-    game_state.resolver.add_dependency(
-        "graphics_vsync",
-        SimpleDependency("gameplay_autosave", SettingState.ENABLED)
-    )
-
-    # Quality needs mouse sensitivity
-    game_state.resolver.add_dependency(
-        "graphics_quality",
-        SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED)
-    )
-
-    # Anti-aliasing requires V-Sync AND tutorials
-    game_state.resolver.add_dependency(
-        "graphics_antialiasing",
-        SimpleDependency("graphics_vsync", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "graphics_antialiasing",
-        SimpleDependency("gameplay_tutorials", SettingState.ENABLED)
-    )
-
-    # Gameplay dependencies
-    # Difficulty needs resolution (you need to see the difficulty, obviously)
-    game_state.resolver.add_dependency(
-        "gameplay_difficulty",
-        SimpleDependency("graphics_resolution", SettingState.ENABLED)
-    )
-
-    # Autosave needs difficulty set (need to know what to save!)
-    game_state.resolver.add_dependency(
-        "gameplay_autosave",
-        SimpleDependency("gameplay_difficulty", SettingState.ENABLED)
-    )
-
-    # Tutorials needs invert Y configured (must learn controls first!)
-    game_state.resolver.add_dependency(
-        "gameplay_tutorials",
-        SimpleDependency("controls_invert_y", SettingState.ENABLED)
-    )
-
-    # Controls dependencies
-    # Mouse sensitivity needs resolution set (need screen space calibration!)
-    game_state.resolver.add_dependency(
-        "controls_mouse_sensitivity",
-        SimpleDependency("graphics_resolution", SettingState.ENABLED)
-    )
-
-    # Invert Y needs mouse sensitivity set first
-    game_state.resolver.add_dependency(
-        "controls_invert_y",
-        SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED)
-    )
-
-    # Controller vibration requires Y-axis inversion AND audio enabled
-    game_state.resolver.add_dependency(
-        "controls_vibration",
-        SimpleDependency("controls_invert_y", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "controls_vibration",
-        SimpleDependency("audio_enable", SettingState.ENABLED)
-    )
-
-    # THE KEY GAMEPLAY MECHANIC:
-    # Start Game requires ALL other settings to be enabled
-    # This creates the core frustration loop
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("audio_master_volume", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("audio_enable", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("audio_speaker_config", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("audio_3d_sound", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("graphics_resolution", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("graphics_vsync", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("graphics_quality", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("graphics_antialiasing", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("gameplay_difficulty", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("gameplay_autosave", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("gameplay_tutorials", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("controls_mouse_sensitivity", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("controls_invert_y", SettingState.ENABLED)
-    )
-    game_state.resolver.add_dependency(
-        "start_game",
-        SimpleDependency("controls_vibration", SettingState.ENABLED)
-    )
+    # Setup dependency web
+    _setup_dependencies(game_state)
 
     return game_state
 
