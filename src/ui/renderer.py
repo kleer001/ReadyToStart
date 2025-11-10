@@ -41,55 +41,45 @@ class ANSIColor:
         return color_map.get(name.lower(), "")
 
 
+ANSI_PATTERN = re.compile(r'\x1b\[[0-9;]*m')
+
+
 def strip_ansi(text: str) -> str:
-    """Remove ANSI escape sequences from text."""
-    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-    return ansi_escape.sub('', text)
+    return ANSI_PATTERN.sub('', text)
 
 
 def visible_length(text: str) -> int:
-    """Get the visible length of text, excluding ANSI codes."""
     return len(strip_ansi(text))
 
 
-def pad_with_ansi(text: str, width: int, align: str = 'left') -> str:
-    """Pad text to a specific visible width, preserving ANSI codes."""
-    visible_len = visible_length(text)
-    if visible_len >= width:
-        # Need to truncate while preserving ANSI codes
-        stripped = strip_ansi(text)
-        if len(stripped) > width:
-            # Find the position in the original text that corresponds to width visible chars
-            visible_count = 0
-            result = ""
-            ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-            i = 0
-            while i < len(text) and visible_count < width:
-                match = ansi_escape.match(text[i:])
-                if match:
-                    # Add the ANSI code without counting it
-                    result += match.group()
-                    i += len(match.group())
-                else:
-                    # Add the character and count it
-                    result += text[i]
-                    visible_count += 1
-                    i += 1
-            # Make sure we close any open ANSI sequences
-            if '\x1b[' in text:
-                result += ANSIColor.RESET
-            return result
-        return text
+def truncate_ansi(text: str, width: int) -> str:
+    visible = 0
+    result = []
+    i = 0
 
-    padding_needed = width - visible_len
-    if align == 'left':
-        return text + ' ' * padding_needed
-    elif align == 'right':
-        return ' ' * padding_needed + text
-    else:  # center
-        left_pad = padding_needed // 2
-        right_pad = padding_needed - left_pad
-        return ' ' * left_pad + text + ' ' * right_pad
+    while i < len(text) and visible < width:
+        match = ANSI_PATTERN.match(text, i)
+        if match:
+            result.append(match.group())
+            i = match.end()
+        else:
+            result.append(text[i])
+            visible += 1
+            i += 1
+
+    if ANSI_PATTERN.search(text):
+        result.append(ANSIColor.RESET)
+
+    return ''.join(result)
+
+
+def pad_ansi(text: str, width: int) -> str:
+    current = visible_length(text)
+
+    if current > width:
+        return truncate_ansi(text, width)
+
+    return text + ' ' * (width - current)
 
 
 class Component(ABC):
@@ -147,7 +137,7 @@ class TextRenderer:
             if line == "---":
                 lines.append(divider_left + horizontal * inner_width + divider_right)
             else:
-                padded = pad_with_ansi(line, inner_width, align='left')
+                padded = pad_ansi(line, inner_width)
                 lines.append(vertical + padded + vertical)
 
         lines.append(bottom_left + horizontal * inner_width + bottom_right)
