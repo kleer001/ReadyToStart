@@ -32,7 +32,7 @@
 ## Phase 4: UI Implementation ✓ COMPLETE
 **Interface & Interaction**
 
-- ncurses-based menu renderer (upgraded from simple ANSI)
+- ncurses-based menu renderer
 - Keyboard navigation (arrows, WASD, vim keys)
 - Visual state indicators
 - Progress bar system (fake/real)

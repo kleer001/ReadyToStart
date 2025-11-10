@@ -4,11 +4,9 @@
 
 **Status:** Phase 4 is complete with ncurses-based implementation.
 
-**Note:** The original plan was to use simple ANSI escape codes, but the implementation was upgraded to use ncurses for superior terminal handling. This provides rock-solid formatting, automatic text width handling, native keyboard input, and double-buffered rendering.
-
 ---
 
-## Original Plan (for reference)
+## Implementation Details
 
 ### 4.1 Text Renderer Core
 **Goal:** Basic text-based display system
@@ -582,5 +580,3 @@ lines_per_page = 15
 3. **Enhance Display:** State indicators + progress bars
 4. **Polish:** Messages + layout manager + animations
 5. **Integration:** Main loop connecting everything
-
-Keep it simple. Terminal-based text UI. No ncurses, no fancy TUI libraries. Just print statements and ANSI codes. The senior dev will appreciate not having to debug curses window management.

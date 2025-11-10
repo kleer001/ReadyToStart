@@ -184,30 +184,6 @@ python -m pytest tests/
 
 See [docs/Roadmap_BirdseyeView.md](docs/Roadmap_BirdseyeView.md) for the overall project roadmap.
 
-### Technical Highlights
-
-**ncurses Migration (Phase 4 Enhancement)**
-
-The UI was successfully migrated from ANSI escape codes to native ncurses, providing:
-- Rock-solid formatting with no ANSI padding hacks
-- Automatic handling of colored text width
-- Native keyboard input support
-- Double-buffered, flicker-free rendering
-- Industry-standard terminal handling
-
-**Zero External Dependencies**
-
-The game uses only Python standard library (ncurses is built-in) plus:
-- `networkx` - For dependency graph generation (gameplay-critical)
-
-**Playtesting Framework**
-
-Comprehensive playtesting tools include:
-- Interactive session tracking with metrics
-- Solvability validation
-- Difficulty analysis
-- Session comparison and review
-
 ## License
 
 MIT License - See [LICENSE](LICENSE) for details.
