@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from abc import ABC, abstractmethod
 
@@ -38,6 +39,47 @@ class ANSIColor:
             "black": cls.BLACK,
         }
         return color_map.get(name.lower(), "")
+
+
+ANSI_PATTERN = re.compile(r'\x1b\[[0-9;]*m')
+
+
+def strip_ansi(text: str) -> str:
+    return ANSI_PATTERN.sub('', text)
+
+
+def visible_length(text: str) -> int:
+    return len(strip_ansi(text))
+
+
+def truncate_ansi(text: str, width: int) -> str:
+    visible = 0
+    result = []
+    i = 0
+
+    while i < len(text) and visible < width:
+        match = ANSI_PATTERN.match(text, i)
+        if match:
+            result.append(match.group())
+            i = match.end()
+        else:
+            result.append(text[i])
+            visible += 1
+            i += 1
+
+    if ANSI_PATTERN.search(text):
+        result.append(ANSIColor.RESET)
+
+    return ''.join(result)
+
+
+def pad_ansi(text: str, width: int) -> str:
+    current = visible_length(text)
+
+    if current > width:
+        return truncate_ansi(text, width)
+
+    return text + ' ' * (width - current)
 
 
 class Component(ABC):
@@ -95,7 +137,7 @@ class TextRenderer:
             if line == "---":
                 lines.append(divider_left + horizontal * inner_width + divider_right)
             else:
-                padded = line.ljust(inner_width)[:inner_width]
+                padded = pad_ansi(line, inner_width)
                 lines.append(vertical + padded + vertical)
 
         lines.append(bottom_left + horizontal * inner_width + bottom_right)
