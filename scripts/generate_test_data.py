@@ -5,6 +5,11 @@ This script creates a sample game state with multiple menus
 and settings that can be used for manual testing and development.
 """
 
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from src.core.dependencies import SimpleDependency
 from src.core.enums import SettingState, SettingType
 from src.core.game_state import GameState

@@ -7,6 +7,7 @@ from pathlib import Path
 class ContentStats:
     def __init__(self):
         self.stats = {}
+        self.project_root = Path(__file__).parent.parent
 
     def analyze_content(self) -> None:
         self._count_categories()
@@ -18,7 +19,7 @@ class ContentStats:
         self._display_results()
 
     def _count_categories(self) -> None:
-        filepath = Path("data/menu_categories.json")
+        filepath = self.project_root / "data/menu_categories.json"
         if not filepath.exists():
             return
 
@@ -36,7 +37,7 @@ class ContentStats:
         self.stats["Complexity Distribution"] = complexity_counts
 
     def _count_templates(self) -> None:
-        template_dir = Path("data/setting_templates")
+        template_dir = self.project_root / "data/setting_templates"
         if not template_dir.exists():
             return
 
@@ -53,7 +54,7 @@ class ContentStats:
         self.stats["Total Templates"] = total_templates
 
     def _count_madlibs_words(self) -> None:
-        filepath = Path("data/madlibs_pools.json")
+        filepath = self.project_root / "data/madlibs_pools.json"
         if not filepath.exists():
             return
 
@@ -82,7 +83,7 @@ class ContentStats:
         return count
 
     def _count_error_messages(self) -> None:
-        filepath = Path("data/error_messages.json")
+        filepath = self.project_root / "data/error_messages.json"
         if not filepath.exists():
             return
 
@@ -107,7 +108,7 @@ class ContentStats:
         self.stats["Error Codes"] = error_codes
 
     def _count_hints(self) -> None:
-        filepath = Path("data/hints.json")
+        filepath = self.project_root / "data/hints.json"
         if not filepath.exists():
             return
 
@@ -134,7 +135,7 @@ class ContentStats:
         self.stats["Total Hints"] = category_hints + contextual + tutorial + special
 
     def _count_patterns(self) -> None:
-        filepath = Path("data/dependency_patterns.json")
+        filepath = self.project_root / "data/dependency_patterns.json"
         if not filepath.exists():
             return
 

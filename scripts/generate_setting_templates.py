@@ -410,10 +410,12 @@ class TemplateGenerator:
 
 
 def main():
+    project_root = Path(__file__).parent.parent
     generator = TemplateGenerator(
-        "data/menu_categories.json", "data/madlibs_pools.json"
+        str(project_root / "data/menu_categories.json"),
+        str(project_root / "data/madlibs_pools.json")
     )
-    generator.generate_all("data/setting_templates")
+    generator.generate_all(str(project_root / "data/setting_templates"))
     print("\nAll template files generated successfully")
 
 

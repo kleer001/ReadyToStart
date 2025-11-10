@@ -15,7 +15,8 @@ def get_rarity_symbol(rarity: str) -> str:
 
 
 def show_progress():
-    achievements_file = Path("data/achievements.json")
+    project_root = Path(__file__).parent.parent
+    achievements_file = project_root / "data/achievements.json"
 
     if not achievements_file.exists():
         print("Error: achievements.json not found in data/ directory")
