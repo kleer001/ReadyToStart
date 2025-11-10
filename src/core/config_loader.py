@@ -1,6 +1,57 @@
 import configparser
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+
+
+class DifficultyTier(Enum):
+    """Difficulty tiers for dependency generation."""
+    EASY = "easy"
+    MEDIUM = "medium"
+    HARD = "hard"
+
+
+@dataclass
+class DifficultyConfig:
+    """Configuration for dependency difficulty per tier."""
+    min_dependencies: int = 1
+    max_dependencies: int = 3
+    mean_dependencies: float = 2.0
+    std_dev: float = 0.5
+
+    @staticmethod
+    def for_tier(tier: DifficultyTier, total_settings: int) -> "DifficultyConfig":
+        """Create difficulty config for a specific tier.
+
+        Args:
+            tier: Difficulty tier
+            total_settings: Total number of settings (used for cap calculation)
+
+        Returns:
+            DifficultyConfig with appropriate parameters
+        """
+        # Cap max at half of total settings or 20, whichever is lower
+        absolute_max = min(total_settings // 2, 20)
+
+        if tier == DifficultyTier.EASY:
+            max_deps = min(3, absolute_max)
+            mean = 1.5
+            std_dev = 0.7
+        elif tier == DifficultyTier.MEDIUM:
+            max_deps = min(6, absolute_max)
+            mean = 3.0
+            std_dev = 1.2
+        else:  # HARD
+            max_deps = min(12, absolute_max)
+            mean = 5.0
+            std_dev = 2.0
+
+        return DifficultyConfig(
+            min_dependencies=1,
+            max_dependencies=max_deps,
+            mean_dependencies=mean,
+            std_dev=std_dev
+        )
 
 
 @dataclass
@@ -12,6 +63,7 @@ class GenerationConfig:
     critical_ratio: float
     decoy_ratio: float
     noise_ratio: float
+    difficulty_tier: DifficultyTier = DifficultyTier.MEDIUM
 
 
 class ConfigLoader:
@@ -19,9 +71,15 @@ class ConfigLoader:
         self.config_dir = Path(config_dir)
         self.parser = configparser.ConfigParser()
 
-    def load_generation_params(self) -> GenerationConfig:
+    def load_generation_params(self, difficulty: DifficultyTier | None = None) -> GenerationConfig:
         self._load_file("generation.ini")
         section = self.parser["generation"]
+
+        # Allow override or read from config
+        if difficulty is None:
+            difficulty_str = section.get("difficulty_tier", "medium")
+            difficulty = DifficultyTier(difficulty_str)
+
         return GenerationConfig(
             min_path_length=section.getint("min_path_length"),
             max_depth=section.getint("max_depth"),
@@ -30,6 +88,7 @@ class ConfigLoader:
             critical_ratio=section.getfloat("critical_ratio"),
             decoy_ratio=section.getfloat("decoy_ratio"),
             noise_ratio=section.getfloat("noise_ratio"),
+            difficulty_tier=difficulty
         )
 
     def load_wfc_rules(self) -> dict[str, dict[str, list[str]]]:
