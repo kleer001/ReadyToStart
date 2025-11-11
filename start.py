@@ -10,7 +10,10 @@ import curses
 import sys
 from pathlib import Path
 
+import networkx as nx
+
 from src.core.config_loader import DifficultyTier
+from src.core.game_state import GameState
 from src.generation.pipeline import GenerationPipeline
 from src.ui.main_loop import UILoop
 
@@ -31,6 +34,56 @@ def create_game(difficulty: DifficultyTier = DifficultyTier.MEDIUM, seed: int | 
     return pipeline.generate(seed=seed, difficulty=difficulty)
 
 
+def find_final_setting(game_state: GameState) -> str:
+    """Find the final setting in the dependency chain.
+
+    This finds a setting that would be one of the last to be enabled,
+    typically one with the most dependencies or deepest in the chain.
+
+    Args:
+        game_state: The game state with all settings and dependencies
+
+    Returns:
+        The label of a final setting in the dependency chain
+    """
+    # Build dependency graph
+    dep_graph = nx.DiGraph()
+
+    for setting_id, deps in game_state.resolver.dependencies.items():
+        for dep in deps:
+            if hasattr(dep, 'setting_id'):
+                # Edge from dependency to dependent (dep.setting_id -> setting_id)
+                dep_graph.add_edge(dep.setting_id, setting_id)
+
+    # Find settings with no outgoing edges (sink nodes - nothing depends on them)
+    sink_nodes = [node for node in dep_graph.nodes() if dep_graph.out_degree(node) == 0]
+
+    if not sink_nodes:
+        # No sink nodes found, find the setting with the most dependencies
+        max_deps = 0
+        final_setting_id = None
+        for setting_id, deps in game_state.resolver.dependencies.items():
+            if len(deps) > max_deps:
+                max_deps = len(deps)
+                final_setting_id = setting_id
+
+        if final_setting_id:
+            setting = game_state.get_setting(final_setting_id)
+            return setting.label if setting else "the final setting"
+    else:
+        # Return one of the sink nodes (prefer one with dependencies)
+        for node in sink_nodes:
+            if node in game_state.resolver.dependencies:
+                setting = game_state.get_setting(node)
+                return setting.label if setting else "the final setting"
+
+        # If no sink node has dependencies, just return the first one
+        setting = game_state.get_setting(sink_nodes[0])
+        return setting.label if setting else "the final setting"
+
+    return "the final setting"
+
+
 def show_main_menu(stdscr):
     """Show the main menu and return the user's choice.
 
@@ -41,6 +94,11 @@ def show_main_menu(stdscr):
     stdscr.nodelay(False)  # Blocking input
     stdscr.keypad(True)  # Enable arrow keys
 
+    # Initialize colors
+    curses.start_color()
+    curses.use_default_colors()
+    curses.init_pair(1, curses.COLOR_CYAN, -1)
+
     selected = 0
     menu_items = ["Play", "Options"]
 
@@ -48,20 +106,55 @@ def show_main_menu(stdscr):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        # Title
-        title = "READY TO START"
-        y = height // 2 - 4
-        stdscr.addstr(y, (width - len(title)) // 2, title, curses.A_BOLD)
+        # Box dimensions - same as gameplay menus
+        box_width = 80
+        box_height = 10
+        start_x = (width - box_width) // 2
+        start_y = (height - box_height) // 2
 
-        # Menu items
-        y += 3
-        for idx, item in enumerate(menu_items):
-            x = width // 2 - 10
-            if idx == selected:
-                stdscr.addstr(y, x, f"> {item} <", curses.A_REVERSE)
-            else:
-                stdscr.addstr(y, x, f"  {item}  ")
-            y += 2
+        # Double-line box characters
+        top_left, top_right = "╔", "╗"
+        bottom_left, bottom_right = "╚", "╝"
+        horizontal, vertical = "═", "║"
+        divider_left, divider_right = "╠", "╣"
+
+        try:
+            # Top border
+            stdscr.addstr(start_y, start_x, top_left + horizontal * (box_width - 2) + top_right)
+
+            # Title line
+            title = "READY TO START"
+            title_line = title.center(box_width - 2)
+            stdscr.addstr(start_y + 1, start_x, vertical + title_line + vertical)
+
+            # Divider
+            stdscr.addstr(start_y + 2, start_x, divider_left + horizontal * (box_width - 2) + divider_right)
+
+            # Empty line
+            stdscr.addstr(start_y + 3, start_x, vertical + " " * (box_width - 2) + vertical)
+
+            # Menu items
+            for idx, item in enumerate(menu_items):
+                line_y = start_y + 4 + idx
+                if idx == selected:
+                    # Cyan color with bold for selected item
+                    item_text = f"> {item} <".center(box_width - 2)
+                    stdscr.addstr(line_y, start_x, vertical)
+                    stdscr.addstr(line_y, start_x + 1, item_text, curses.color_pair(1) | curses.A_BOLD)
+                    stdscr.addstr(line_y, start_x + box_width - 1, vertical)
+                else:
+                    item_text = f"  {item}  ".center(box_width - 2)
+                    stdscr.addstr(line_y, start_x, vertical + item_text + vertical)
+
+            # Empty lines to fill box
+            for i in range(len(menu_items), 6):
+                stdscr.addstr(start_y + 4 + i, start_x, vertical + " " * (box_width - 2) + vertical)
+
+            # Bottom border
+            stdscr.addstr(start_y + box_height - 1, start_x, bottom_left + horizontal * (box_width - 2) + bottom_right)
+
+        except curses.error:
+            pass
 
         stdscr.refresh()
 
@@ -78,41 +171,81 @@ def show_main_menu(stdscr):
             sys.exit(0)
 
 
-def show_play_error(stdscr):
-    """Show the error message when trying to play without configuring settings."""
+def show_play_error(stdscr, final_setting_name: str):
+    """Show the error message when trying to play without configuring settings.
+
+    Args:
+        stdscr: The curses screen
+        final_setting_name: The name of the final setting to configure
+    """
     stdscr.clear()
     height, width = stdscr.getmaxyx()
 
-    y = height // 2 - 5
+    # Box dimensions
+    box_width = 80
+    box_height = 14
+    start_x = (width - box_width) // 2
+    start_y = (height - box_height) // 2
 
-    messages = [
-        "ERROR: Cannot start game",
-        "",
-        "Game requires 'Enable Gameplay' setting to be configured.",
-        "",
-        "Please enable 'Enable Gameplay' in Options first.",
-        "",
-        "",
-        "Press any key to return to menu..."
-    ]
+    # Double-line box characters
+    top_left, top_right = "╔", "╗"
+    bottom_left, bottom_right = "╚", "╝"
+    horizontal, vertical = "═", "║"
+    divider_left, divider_right = "╠", "╣"
 
-    for msg in messages:
-        if msg:
-            stdscr.addstr(y, (width - len(msg)) // 2, msg)
-        y += 1
+    try:
+        # Top border
+        stdscr.addstr(start_y, start_x, top_left + horizontal * (box_width - 2) + top_right)
+
+        # Title
+        title = "ERROR: Cannot start game"
+        stdscr.addstr(start_y + 1, start_x, vertical + title.center(box_width - 2) + vertical)
+
+        # Divider
+        stdscr.addstr(start_y + 2, start_x, divider_left + horizontal * (box_width - 2) + divider_right)
+
+        # Message content
+        messages = [
+            "",
+            f"Game requires '{final_setting_name}' setting to be configured.",
+            "",
+            f"Please enable '{final_setting_name}' in Options first.",
+            "",
+            "",
+            "Press any key to return to menu..."
+        ]
+
+        for i, msg in enumerate(messages):
+            line = msg.center(box_width - 2)
+            stdscr.addstr(start_y + 3 + i, start_x, vertical + line + vertical)
+
+        # Fill remaining lines
+        for i in range(len(messages), box_height - 4):
+            stdscr.addstr(start_y + 3 + i, start_x, vertical + " " * (box_width - 2) + vertical)
+
+        # Bottom border
+        stdscr.addstr(start_y + box_height - 1, start_x, bottom_left + horizontal * (box_width - 2) + bottom_right)
+
+    except curses.error:
+        pass
 
     stdscr.refresh()
     stdscr.getch()  # Wait for keypress
 
 
-def main_menu_loop(stdscr):
-    """Main menu loop - shows menu and handles selection."""
+def main_menu_loop(stdscr, final_setting_name: str):
+    """Main menu loop - shows menu and handles selection.
+
+    Args:
+        stdscr: The curses screen
+        final_setting_name: The name of the final setting to configure
+    """
     while True:
         choice = show_main_menu(stdscr)
 
         if choice == "play":
             # Show error about needing to configure settings
-            show_play_error(stdscr)
+            show_play_error(stdscr, final_setting_name)
         elif choice == "options":
             # This is where the actual game starts
             return
@@ -120,11 +253,15 @@ def main_menu_loop(stdscr):
 
 def main():
     try:
-        # Show main menu first
-        curses.wrapper(main_menu_loop)
-
-        # Generate procedural game with medium difficulty
+        # Generate procedural game with medium difficulty FIRST
+        # (so we know what the final setting is for the main menu)
         game_state = create_game(difficulty=DifficultyTier.MEDIUM, seed=None)
+
+        # Find the final setting in the dependency chain
+        final_setting_name = find_final_setting(game_state)
+
+        # Show main menu with the final setting name
+        curses.wrapper(main_menu_loop, final_setting_name)
 
         config_dir = Path(__file__).parent / "config"
         ui_loop = UILoop(game_state, str(config_dir))

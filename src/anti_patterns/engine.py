@@ -21,6 +21,7 @@ class AntiPattern:
     effect: Effect
     cooldown: int = 0
     remaining_cooldown: int = 0
+    enabled: bool = True
 
 
 class AntiPatternEngine:
@@ -144,7 +145,7 @@ class AntiPatternEngine:
 
     def _check_triggers(self) -> None:
         for pattern in self.patterns:
-            if pattern.remaining_cooldown > 0:
+            if not pattern.enabled or pattern.remaining_cooldown > 0:
                 continue
 
             if pattern.trigger.should_activate(self.trigger_context):
@@ -182,3 +183,125 @@ class AntiPatternEngine:
 
     def is_effect_active(self, effect_id: str) -> bool:
         return any(effect.id == effect_id for effect in self.active_effects)
+
+    # Global enable/disable methods
+    def enable(self) -> None:
+        """Enable the entire anti-pattern engine."""
+        self.enabled = True
+
+    def disable(self) -> None:
+        """Disable the entire anti-pattern engine."""
+        self.enabled = False
+
+    def is_enabled(self) -> bool:
+        """Check if the anti-pattern engine is globally enabled."""
+        return self.enabled
+
+    def toggle(self) -> bool:
+        """Toggle the anti-pattern engine on/off. Returns new state."""
+        self.enabled = not self.enabled
+        return self.enabled
+
+    # Individual pattern enable/disable methods
+    def enable_pattern(self, pattern_id: str) -> bool:
+        """Enable a specific anti-pattern by ID.
+
+        Args:
+            pattern_id: The ID of the pattern to enable
+
+        Returns:
+            True if pattern was found and enabled, False otherwise
+        """
+        for pattern in self.patterns:
+            if pattern.id == pattern_id:
+                pattern.enabled = True
+                return True
+        return False
+
+    def disable_pattern(self, pattern_id: str) -> bool:
+        """Disable a specific anti-pattern by ID.
+
+        Args:
+            pattern_id: The ID of the pattern to disable
+
+        Returns:
+            True if pattern was found and disabled, False otherwise
+        """
+        for pattern in self.patterns:
+            if pattern.id == pattern_id:
+                pattern.enabled = False
+                return True
+        return False
+
+    def toggle_pattern(self, pattern_id: str) -> bool | None:
+        """Toggle a specific anti-pattern on/off.
+
+        Args:
+            pattern_id: The ID of the pattern to toggle
+
+        Returns:
+            New enabled state if pattern found, None if pattern not found
+        """
+        for pattern in self.patterns:
+            if pattern.id == pattern_id:
+                pattern.enabled = not pattern.enabled
+                return pattern.enabled
+        return None
+
+    def is_pattern_enabled(self, pattern_id: str) -> bool:
+        """Check if a specific pattern is enabled.
+
+        Args:
+            pattern_id: The ID of the pattern to check
+
+        Returns:
+            True if pattern is enabled, False if disabled or not found
+        """
+        for pattern in self.patterns:
+            if pattern.id == pattern_id:
+                return pattern.enabled
+        return False
+
+    def get_pattern_ids(self) -> list[str]:
+        """Get list of all pattern IDs."""
+        return [pattern.id for pattern in self.patterns]
+
+    def get_enabled_pattern_ids(self) -> list[str]:
+        """Get list of currently enabled pattern IDs."""
+        return [pattern.id for pattern in self.patterns if pattern.enabled]
+
+    def get_disabled_pattern_ids(self) -> list[str]:
+        """Get list of currently disabled pattern IDs."""
+        return [pattern.id for pattern in self.patterns if not pattern.enabled]
+
+    def enable_all_patterns(self) -> None:
+        """Enable all anti-patterns."""
+        for pattern in self.patterns:
+            pattern.enabled = True
+
+    def disable_all_patterns(self) -> None:
+        """Disable all anti-patterns."""
+        for pattern in self.patterns:
+            pattern.enabled = False
+
+    def get_pattern_info(self, pattern_id: str) -> dict | None:
+        """Get detailed information about a specific pattern.
+
+        Args:
+            pattern_id: The ID of the pattern to query
+
+        Returns:
+            Dictionary with pattern info, or None if not found
+        """
+        for pattern in self.patterns:
+            if pattern.id == pattern_id:
+                return {
+                    "id": pattern.id,
+                    "enabled": pattern.enabled,
+                    "cooldown": pattern.cooldown,
+                    "remaining_cooldown": pattern.remaining_cooldown,
+                    "trigger_type": type(pattern.trigger).__name__,
+                    "effect_type": type(pattern.effect).__name__,
+                    "trigger_activated_count": pattern.trigger.activated_count,
+                }
+        return None
