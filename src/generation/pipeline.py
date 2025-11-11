@@ -96,19 +96,29 @@ class GenerationPipeline:
         """
         game_state = self._create_game_state()
 
-        # Get available categories - use enabled_categories or fallback to all
+        # Get available categories - use enabled_categories or fallback to tiered system
         if level.enabled_categories:
             categories = level.enabled_categories
         else:
-            # Default pool of unique categories
-            all_categories = [
-                "Audio", "Graphics", "User", "Display", "Interface",
-                "Performance", "Network", "Security", "Privacy", "System",
-                "Hardware", "Device", "Input", "Output", "Control",
-                "Appearance", "Theme", "Color", "Data", "Storage",
-                "File", "Access", "Permission", "Cache", "Memory"
-            ]
-            categories = all_categories
+            # Tiered category system: common → advanced → technical
+            # Random order within each tier for variety
+            import random
+
+            tier_1_common = ["Audio", "Display", "Graphics", "User", "Interface"]
+            tier_2_advanced = ["Performance", "System", "Hardware", "Network", "Device"]
+            tier_3_technical = ["Security", "Privacy", "Data", "Storage", "File",
+                               "Cache", "Memory", "Access", "Permission"]
+            tier_4_specialized = ["Input", "Output", "Control", "Appearance", "Theme",
+                                 "Color", "Visual"]
+
+            # Shuffle within each tier for randomness
+            random.shuffle(tier_1_common)
+            random.shuffle(tier_2_advanced)
+            random.shuffle(tier_3_technical)
+            random.shuffle(tier_4_specialized)
+
+            # Combine tiers in order (maintaining tier progression)
+            categories = tier_1_common + tier_2_advanced + tier_3_technical + tier_4_specialized
 
         # Ensure we have enough unique categories for all menus
         if len(categories) < level.menu_count:
