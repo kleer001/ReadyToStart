@@ -84,18 +84,20 @@ class GenerationPipeline:
         return game_state
 
     def _load_tiered_categories(self) -> list[str]:
-        """Load category ordering from settings_groups.ini.
+        """Load category ordering from menu_categories.json.
+
+        Groups categories by complexity (2-5) and shuffles within each tier.
 
         Returns:
             List of categories in tier order with shuffling within tiers
         """
-        import configparser
+        import json
         import random
         from pathlib import Path
 
-        groups_file = Path(self.loader.config_dir) / "settings_groups.ini"
+        categories_file = Path("data") / "menu_categories.json"
 
-        if not groups_file.exists():
+        if not categories_file.exists():
             # Fallback to hardcoded tiers if file doesn't exist
             tier_1 = ["audio", "graphics", "appearance", "notifications", "user_profile"]
             tier_2 = ["shortcuts", "gestures", "accessibility", "localization", "devices"]
@@ -109,30 +111,25 @@ class GenerationPipeline:
 
             return tier_1 + tier_2 + tier_3 + tier_4
 
-        # Load from settings_groups.ini
-        parser = configparser.ConfigParser()
-        parser.read(groups_file)
+        # Load from menu_categories.json
+        with open(categories_file) as f:
+            data = json.load(f)
 
-        # Get tier order
-        tier_order_str = parser.get("Ordering", "tier_order", fallback="")
-        tier_names = [t.strip() for t in tier_order_str.split(",") if t.strip()]
+        # Group categories by complexity rating
+        tiers = {2: [], 3: [], 4: [], 5: []}
 
-        shuffle_within = parser.getboolean("Ordering", "shuffle_within_tier", fallback=True)
+        for category in data["categories"]:
+            complexity = category["complexity"]
+            category_id = category["id"]
+            if complexity in tiers:
+                tiers[complexity].append(category_id)
 
+        # Shuffle within each tier and combine
         all_categories = []
-        for tier_name in tier_names:
-            if tier_name not in parser:
-                continue
-
-            # Parse categories for this tier
-            categories_str = parser.get(tier_name, "categories", fallback="")
-            categories = [c.strip() for c in categories_str.split("\n") if c.strip()]
-
-            # Shuffle within tier if enabled
-            if shuffle_within:
-                random.shuffle(categories)
-
-            all_categories.extend(categories)
+        for complexity_level in sorted(tiers.keys()):
+            tier = tiers[complexity_level]
+            random.shuffle(tier)
+            all_categories.extend(tier)
 
         return all_categories
 
