@@ -14,6 +14,8 @@ import networkx as nx
 
 from src.core.config_loader import DifficultyTier
 from src.core.game_state import GameState
+from src.core.level_manager import LevelManager
+from src.core.level_progression import LevelProgressionTracker
 from src.generation.pipeline import GenerationPipeline
 from src.ui.main_loop import UILoop
 
@@ -172,12 +174,13 @@ def show_main_menu(stdscr):
             sys.exit(0)
 
 
-def show_play_error(stdscr, final_setting_name: str):
-    """Show the error message when trying to play without configuring settings.
+def show_play_error(stdscr, level_name: str, level_number: int):
+    """Show the error message when trying to play without completing required levels.
 
     Args:
         stdscr: The curses screen
-        final_setting_name: The name of the final setting to configure
+        level_name: The name of the level that needs completion
+        level_number: The level number (1, 2, 3, etc.)
     """
     stdscr.clear()
     height, width = stdscr.getmaxyx()
@@ -208,10 +211,11 @@ def show_play_error(stdscr, final_setting_name: str):
         # Message content
         messages = [
             "",
-            f"Game requires '{final_setting_name}' setting to be configured.",
+            f"You must complete '{level_name}' first!",
             "",
-            f"Please enable '{final_setting_name}' in Options first.",
+            f"Click Options to configure {level_name}.",
             "",
+            f"(Complete all levels to start the game)",
             "",
             "Press any key to return to menu..."
         ]
@@ -234,45 +238,178 @@ def show_play_error(stdscr, final_setting_name: str):
     stdscr.getch()  # Wait for keypress
 
 
-def main_menu_loop(stdscr, final_setting_name: str):
-    """Main menu loop - shows menu and handles selection.
+def show_victory_screen(stdscr):
+    """Show victory screen when all levels are complete.
 
     Args:
         stdscr: The curses screen
-        final_setting_name: The name of the final setting to configure
     """
+    stdscr.clear()
+    height, width = stdscr.getmaxyx()
+
+    # Box dimensions
+    box_width = 80
+    box_height = 14
+    start_x = (width - box_width) // 2
+    start_y = (height - box_height) // 2
+
+    # Double-line box characters
+    top_left, top_right = "╔", "╗"
+    bottom_left, bottom_right = "╚", "╝"
+    horizontal, vertical = "═", "║"
+    divider_left, divider_right = "╠", "╣"
+
+    try:
+        # Top border
+        stdscr.addstr(start_y, start_x, top_left + horizontal * (box_width - 2) + top_right)
+
+        # Title
+        title = "CONGRATULATIONS!"
+        stdscr.addstr(start_y + 1, start_x, vertical + title.center(box_width - 2) + vertical, curses.A_BOLD)
+
+        # Divider
+        stdscr.addstr(start_y + 2, start_x, divider_left + horizontal * (box_width - 2) + divider_right)
+
+        # Message content
+        messages = [
+            "",
+            "You've configured ALL the settings!",
+            "",
+            "The game is now ready to start.",
+            "",
+            "(If only there was a game to play...)",
+            "",
+            "Press any key to exit."
+        ]
+
+        for i, msg in enumerate(messages):
+            line = msg.center(box_width - 2)
+            stdscr.addstr(start_y + 3 + i, start_x, vertical + line + vertical)
+
+        # Fill remaining lines
+        for i in range(len(messages), box_height - 4):
+            stdscr.addstr(start_y + 3 + i, start_x, vertical + " " * (box_width - 2) + vertical)
+
+        # Bottom border
+        stdscr.addstr(start_y + box_height - 1, start_x, bottom_left + horizontal * (box_width - 2) + bottom_right)
+
+    except curses.error:
+        pass
+
+    stdscr.refresh()
+    stdscr.getch()  # Wait for keypress
+
+
+def hub_menu_loop(stdscr, progression: LevelProgressionTracker, level_manager: LevelManager,
+                  config_dir: str):
+    """Hub world menu loop - players return here after each level.
+
+    Args:
+        stdscr: The curses screen
+        progression: Level progression tracker
+        level_manager: Level manager with all levels
+        config_dir: Configuration directory path
+
+    Returns:
+        str: Action to take ('play' means all levels complete, 'quit' to exit)
+    """
+    level_order = level_manager.level_order
+
     while True:
         choice = show_main_menu(stdscr)
 
         if choice == "play":
-            # Show error about needing to configure settings
-            show_play_error(stdscr, final_setting_name)
+            # Check if all levels are complete
+            if progression.can_start_game(level_order):
+                # Victory! All levels complete
+                show_victory_screen(stdscr)
+                return "play"
+            else:
+                # Find which level needs to be completed
+                next_level_id = progression.get_next_incomplete_level(level_order)
+                if next_level_id:
+                    level = level_manager.get_level(next_level_id)
+                    level_number = progression.get_current_level_number(level_order)
+                    show_play_error(stdscr, level.name, level_number)
+
         elif choice == "options":
-            # This is where the actual game starts
-            return
+            # Route to the appropriate level
+            next_level_id = progression.get_next_incomplete_level(level_order)
+            if not next_level_id:
+                # All levels complete, shouldn't get here
+                return "play"
+
+            # Play the level
+            game_state = progression.level_game_states[next_level_id]
+            ui_loop = UILoop(game_state, config_dir)
+
+            # Start at the first menu
+            start_menu = game_state.current_menu or list(game_state.menus.keys())[0]
+            ui_loop.start(start_menu)
+
+            # After completing the UI loop, check if level is complete
+            # (This happens automatically in progression.is_level_complete)
+            # Return to hub menu
+            continue
+
+
+def generate_all_levels(config_dir: Path, level_manager: LevelManager) -> dict[str, GameState]:
+    """Generate game states for all levels.
+
+    Args:
+        config_dir: Configuration directory
+        level_manager: Level manager with loaded levels
+
+    Returns:
+        Dict mapping level IDs to their game states
+    """
+    level_game_states = {}
+
+    for level_id in level_manager.level_order:
+        if level_id == "Level_0":  # Skip hub
+            continue
+
+        print(f"Generating {level_id}...")
+        game_state = create_game(
+            difficulty=DifficultyTier.MEDIUM,
+            seed=None,
+            level_id=level_id
+        )
+        level_game_states[level_id] = game_state
+
+    return level_game_states
 
 
 def main():
     try:
-        # Generate procedural game with Level 1 (introductory level)
-        # (so we know what the final setting is for the main menu)
-        game_state = create_game(difficulty=DifficultyTier.MEDIUM, seed=None, level_id="Level_1")
-
-        # Find the final setting in the dependency chain
-        final_setting_name = find_final_setting(game_state)
-
-        # Show main menu with the final setting name
-        curses.wrapper(main_menu_loop, final_setting_name)
-
         config_dir = Path(__file__).parent / "config"
-        ui_loop = UILoop(game_state, str(config_dir))
 
-        # Start at the first menu
-        start_menu = game_state.current_menu or list(game_state.menus.keys())[0]
-        ui_loop.start(start_menu)
+        # Load level manager
+        level_manager = LevelManager(str(config_dir))
+        level_manager.load_levels()
 
-        # Ensure terminal is restored on successful exit
-        print("\n\nThanks for playing!")
+        # Generate all levels
+        print("Initializing levels...")
+        level_game_states = generate_all_levels(config_dir, level_manager)
+
+        # Create progression tracker
+        progression = LevelProgressionTracker()
+        for level_id, game_state in level_game_states.items():
+            progression.register_level(level_id, game_state)
+
+        print("Ready to start!\n")
+
+        # Start hub menu loop
+        result = curses.wrapper(
+            hub_menu_loop,
+            progression,
+            level_manager,
+            str(config_dir)
+        )
+
+        if result == "play":
+            print("\n\nCongratulations! You've mastered the art of settings configuration!")
+            print("Thanks for playing!")
 
     except KeyboardInterrupt:
         print("\n\nGame interrupted. Your settings remain unsaved. Forever.")
