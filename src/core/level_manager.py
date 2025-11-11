@@ -91,16 +91,194 @@ class LevelManager:
     def _load_from_meta(self, meta_file: Path) -> None:
         """Load levels from meta_levels.ini.
 
+        Supports both algorithmic and explicit formats.
+
         Args:
             meta_file: Path to meta_levels.ini
         """
         parser = configparser.ConfigParser()
         parser.read(meta_file)
 
-        if "Meta" not in parser:
-            raise ValueError("meta_levels.ini must have a [Meta] section")
+        # Check for algorithmic format (preferred)
+        if "Algorithm" in parser:
+            self._load_algorithmic(parser["Algorithm"])
+        elif "Meta" in parser:
+            # Legacy explicit format
+            self._load_explicit(parser["Meta"])
+        else:
+            raise ValueError("meta_levels.ini must have either [Algorithm] or [Meta] section")
 
-        meta_section = parser["Meta"]
+    def _load_algorithmic(self, algo_section: configparser.SectionProxy) -> None:
+        """Generate levels algorithmically from formula parameters.
+
+        Args:
+            algo_section: Algorithm configuration section
+        """
+        import random
+
+        # Parse algorithm parameters
+        total_levels = int(algo_section.get("total_levels", "10"))
+        max_settings_per_menu = int(algo_section.get("max_settings_per_menu", "15"))
+        base_settings = int(algo_section.get("base_settings", "5"))
+        base_menus = int(algo_section.get("base_menus", "1"))
+        settings_growth = int(algo_section.get("settings_growth", "2"))
+        levels_per_new_menu = int(algo_section.get("levels_per_new_menu", "3"))
+        variation = float(algo_section.get("variation", "0.2"))
+
+        # Always add Level_0 (hub)
+        hub_level = Level(
+            id="Level_0",
+            name="Main Menu Hub",
+            description="Central hub - always accessible. Keep trying to Play!",
+            menu_count=0,
+            settings_per_menu=[],
+            max_items_per_page=max_settings_per_menu
+        )
+        self.levels["Level_0"] = hub_level
+        self.level_order.append("Level_0")
+
+        # Generate levels using algorithm
+        for level_num in range(1, total_levels + 1):
+            # Calculate menus for this level
+            menus = base_menus + (level_num - 1) // levels_per_new_menu
+
+            # Calculate total settings for this level
+            total_settings = base_settings + (level_num - 1) * settings_growth
+
+            # Distribute settings across menus
+            settings_per_menu = self._distribute_settings(
+                total_settings,
+                menus,
+                max_settings_per_menu,
+                variation
+            )
+
+            # Create level
+            level = self._create_level_from_algorithm(
+                level_num,
+                menus,
+                settings_per_menu,
+                max_settings_per_menu
+            )
+
+            level_id = f"Level_{level_num}"
+            self.levels[level_id] = level
+            self.level_order.append(level_id)
+
+    def _distribute_settings(
+        self,
+        total: int,
+        menus: int,
+        max_per_menu: int,
+        variation: float
+    ) -> list[int]:
+        """Distribute settings across menus with optional variation.
+
+        Args:
+            total: Total number of settings to distribute
+            menus: Number of menus
+            max_per_menu: Maximum settings per menu
+            variation: Amount of random variation (0.0 to 1.0)
+
+        Returns:
+            List of settings per menu
+        """
+        import random
+
+        # Base distribution
+        base_per_menu = total // menus
+        remainder = total % menus
+
+        # Ensure we don't exceed max
+        if base_per_menu > max_per_menu:
+            # Need more menus to accommodate settings
+            needed_menus = (total + max_per_menu - 1) // max_per_menu
+            menus = needed_menus
+            base_per_menu = total // menus
+            remainder = total % menus
+
+        # Create distribution
+        distribution = [base_per_menu] * menus
+
+        # Distribute remainder
+        for i in range(remainder):
+            distribution[i] += 1
+
+        # Apply variation if requested
+        if variation > 0:
+            for i in range(len(distribution)):
+                # Random variation within ±variation * base
+                vary_amount = int(distribution[i] * variation)
+                if vary_amount > 0:
+                    distribution[i] += random.randint(-vary_amount, vary_amount)
+                    # Clamp to valid range
+                    distribution[i] = max(1, min(max_per_menu, distribution[i]))
+
+        # Ensure total is maintained after variation
+        current_total = sum(distribution)
+        if current_total != total:
+            diff = total - current_total
+            # Adjust first menu to match total
+            distribution[0] = max(1, distribution[0] + diff)
+            distribution[0] = min(max_per_menu, distribution[0])
+
+        return distribution
+
+    def _create_level_from_algorithm(
+        self,
+        level_num: int,
+        menus: int,
+        settings_per_menu: list[int],
+        max_items: int
+    ) -> Level:
+        """Create a Level object from algorithmic parameters.
+
+        Args:
+            level_num: Level number
+            menus: Number of menus
+            settings_per_menu: Settings distribution
+            max_items: Max items per page
+
+        Returns:
+            Level object
+        """
+        # Calculate difficulty parameters based on level number
+        min_path = min(level_num, 5)
+        max_depth = min(level_num + 1, 7)
+        gate_dist = min(0.1 + (level_num - 1) * 0.05, 0.5)
+        critical_ratio = min(0.3 + (level_num - 1) * 0.03, 0.6)
+
+        # Generate level name
+        total_settings = sum(settings_per_menu)
+        if menus == 1:
+            name = f"Options - Level {level_num} ({total_settings} settings)"
+        else:
+            name = f"Options - Level {level_num} ({menus} menus)"
+
+        return Level(
+            id=f"Level_{level_num}",
+            name=name,
+            description=f"Level {level_num}: {menus} menu(s), {total_settings} settings total",
+            menu_count=menus,
+            settings_per_menu=settings_per_menu,
+            max_items_per_page=max_items,
+            min_path_length=min_path,
+            max_depth=max_depth,
+            required_categories=min(menus, 5),
+            gate_distribution=gate_dist,
+            critical_ratio=critical_ratio,
+            decoy_ratio=0.35,
+            noise_ratio=0.30,
+            enabled_categories=[],
+            dependency_network={}
+        )
+
+    def _load_explicit(self, meta_section: configparser.SectionProxy) -> None:
+        """Load levels from explicit level specifications (legacy format).
+
+        Args:
+            meta_section: Meta configuration section
+        """
         max_items = int(meta_section.get("max_items_per_page", "15"))
 
         # Parse level pattern
@@ -112,7 +290,7 @@ class LevelManager:
             id="Level_0",
             name="Main Menu Hub",
             description="Central hub - always accessible. Keep trying to Play!",
-            menu_count=0,  # Hub has no gameplay
+            menu_count=0,
             settings_per_menu=[],
             max_items_per_page=max_items
         )
