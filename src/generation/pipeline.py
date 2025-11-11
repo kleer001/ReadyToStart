@@ -83,6 +83,59 @@ class GenerationPipeline:
 
         return game_state
 
+    def _load_tiered_categories(self) -> list[str]:
+        """Load category ordering from settings_groups.ini.
+
+        Returns:
+            List of categories in tier order with shuffling within tiers
+        """
+        import configparser
+        import random
+        from pathlib import Path
+
+        groups_file = Path(self.loader.config_dir) / "settings_groups.ini"
+
+        if not groups_file.exists():
+            # Fallback to hardcoded tiers if file doesn't exist
+            tier_1 = ["audio", "graphics", "appearance", "notifications", "user_profile"]
+            tier_2 = ["shortcuts", "gestures", "accessibility", "localization", "devices"]
+            tier_3 = ["performance", "power_management", "storage", "updates", "startup"]
+            tier_4 = ["network", "security", "privacy", "backup", "cloud_sync"]
+
+            random.shuffle(tier_1)
+            random.shuffle(tier_2)
+            random.shuffle(tier_3)
+            random.shuffle(tier_4)
+
+            return tier_1 + tier_2 + tier_3 + tier_4
+
+        # Load from settings_groups.ini
+        parser = configparser.ConfigParser()
+        parser.read(groups_file)
+
+        # Get tier order
+        tier_order_str = parser.get("Ordering", "tier_order", fallback="")
+        tier_names = [t.strip() for t in tier_order_str.split(",") if t.strip()]
+
+        shuffle_within = parser.getboolean("Ordering", "shuffle_within_tier", fallback=True)
+
+        all_categories = []
+        for tier_name in tier_names:
+            if tier_name not in parser:
+                continue
+
+            # Parse categories for this tier
+            categories_str = parser.get(tier_name, "categories", fallback="")
+            categories = [c.strip() for c in categories_str.split("\n") if c.strip()]
+
+            # Shuffle within tier if enabled
+            if shuffle_within:
+                random.shuffle(categories)
+
+            all_categories.extend(categories)
+
+        return all_categories
+
     def _generate_simple(self, level) -> GameState:
         """Generate a simple game state with explicit menu structure.
 
@@ -100,25 +153,11 @@ class GenerationPipeline:
         if level.enabled_categories:
             categories = level.enabled_categories
         else:
-            # Tiered category system: common → advanced → technical
-            # Random order within each tier for variety
-            import random
+            # Load tiered category system from settings_groups.ini
+            categories = self._load_tiered_categories()
 
-            tier_1_common = ["Audio", "Display", "Graphics", "User", "Interface"]
-            tier_2_advanced = ["Performance", "System", "Hardware", "Network", "Device"]
-            tier_3_technical = ["Security", "Privacy", "Data", "Storage", "File",
-                               "Cache", "Memory", "Access", "Permission"]
-            tier_4_specialized = ["Input", "Output", "Control", "Appearance", "Theme",
-                                 "Color", "Visual"]
-
-            # Shuffle within each tier for randomness
-            random.shuffle(tier_1_common)
-            random.shuffle(tier_2_advanced)
-            random.shuffle(tier_3_technical)
-            random.shuffle(tier_4_specialized)
-
-            # Combine tiers in order (maintaining tier progression)
-            categories = tier_1_common + tier_2_advanced + tier_3_technical + tier_4_specialized
+        # Capitalize first letter for display (template names are lowercase)
+        categories = [c.replace("_", " ").title() for c in categories]
 
         # Ensure we have enough unique categories for all menus
         if len(categories) < level.menu_count:
