@@ -18,18 +18,19 @@ from src.generation.pipeline import GenerationPipeline
 from src.ui.main_loop import UILoop
 
 
-def create_game(difficulty: DifficultyTier = DifficultyTier.MEDIUM, seed: int | None = None):
+def create_game(difficulty: DifficultyTier = DifficultyTier.MEDIUM, seed: int | None = None, level_id: str | None = None):
     """Generate a procedural game using the generation pipeline.
 
     Args:
         difficulty: Difficulty tier (EASY, MEDIUM, HARD)
         seed: Optional random seed for reproducibility
+        level_id: Optional level identifier (e.g., "Level_1")
 
     Returns:
         Generated GameState with procedural menus and dependencies
     """
     config_dir = Path(__file__).parent / "config"
-    pipeline = GenerationPipeline(str(config_dir), difficulty=difficulty)
+    pipeline = GenerationPipeline(str(config_dir), difficulty=difficulty, level_id=level_id)
 
     return pipeline.generate(seed=seed, difficulty=difficulty)
 
@@ -253,9 +254,9 @@ def main_menu_loop(stdscr, final_setting_name: str):
 
 def main():
     try:
-        # Generate procedural game with medium difficulty FIRST
+        # Generate procedural game with Level 1 (introductory level)
         # (so we know what the final setting is for the main menu)
-        game_state = create_game(difficulty=DifficultyTier.MEDIUM, seed=None)
+        game_state = create_game(difficulty=DifficultyTier.MEDIUM, seed=None, level_id="Level_1")
 
         # Find the final setting in the dependency chain
         final_setting_name = find_final_setting(game_state)

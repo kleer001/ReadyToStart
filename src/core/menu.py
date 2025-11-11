@@ -23,6 +23,7 @@ class MenuNode:
         hidden_triggers: List of trigger dicts for hidden features
         visited: Whether this menu has been visited
         completion_state: Current completion state of the menu
+        level_id: Level identifier this menu belongs to (optional)
     """
 
     id: str
@@ -33,6 +34,7 @@ class MenuNode:
     hidden_triggers: list[dict] = field(default_factory=list)
     visited: bool = False
     completion_state: CompletionState = CompletionState.INCOMPLETE
+    level_id: str | None = None
 
     def add_setting(self, setting: Setting) -> None:
         """Add a setting to this menu node."""

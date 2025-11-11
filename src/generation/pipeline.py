@@ -2,6 +2,7 @@ import random
 
 from src.core.config_loader import ConfigLoader
 from src.core.game_state import GameState
+from src.core.level_manager import LevelManager
 from src.core.menu import MenuNode
 from src.generation.compiler import SettingCompiler
 from src.generation.dep_generator import DependencyGenerator
@@ -14,14 +15,39 @@ MAX_GENERATION_ATTEMPTS = 5
 
 
 class GenerationPipeline:
-    def __init__(self, config_dir: str = "config/", difficulty=None):
+    def __init__(self, config_dir: str = "config/", difficulty=None, level_id: str | None = None):
         self.loader = ConfigLoader(config_dir)
         self.config = self.loader.load_generation_params(difficulty=difficulty)
         self.wfc_rules = self.loader.load_wfc_rules()
         self.templates = self.loader.load_templates()
 
+        # Initialize level manager
+        self.level_manager = LevelManager(config_dir)
+        try:
+            self.level_manager.load_levels()
+            if level_id:
+                self.level_manager.set_current_level(level_id)
+        except FileNotFoundError:
+            # If levels.ini doesn't exist, continue without levels
+            pass
+
+        # Apply level-specific configuration overrides
+        max_items = 15
+        current_level = self.level_manager.get_current_level()
+        if current_level:
+            max_items = current_level.max_items_per_page
+            # Override generation config with level-specific parameters
+            self.config.min_path_length = current_level.min_path_length
+            self.config.max_depth = current_level.max_depth
+            self.config.required_categories = current_level.required_categories
+            self.config.gate_distribution = current_level.gate_distribution
+            self.config.critical_ratio = current_level.critical_ratio
+            self.config.decoy_ratio = current_level.decoy_ratio
+            self.config.noise_ratio = current_level.noise_ratio
+
         self.madlibs = MadLibsEngine(self.templates, self.loader)
-        self.compiler = SettingCompiler(self.config, self.madlibs)
+        self.compiler = SettingCompiler(self.config, self.madlibs, max_items_per_page=max_items)
+        self.current_level_id = level_id
 
     def generate(self, seed: int | None = None, difficulty=None) -> GameState:
         if seed is not None:
@@ -82,10 +108,13 @@ class GenerationPipeline:
                 id=node_id,
                 category=category,
                 connections=list(graph.successors(node_id)),
+                level_id=self.current_level_id,
             )
 
             settings = self.compiler.compile_settings(node_id, category, is_critical)
             for setting in settings:
+                # Set level_id on each setting
+                setting.level_id = self.current_level_id
                 menu.add_setting(setting)
 
             game_state.add_menu(menu)
