@@ -95,12 +95,32 @@ class GenerationPipeline:
             GameState with simple menu structure
         """
         game_state = self._create_game_state()
-        categories = level.enabled_categories if level.enabled_categories else ["Audio", "Graphics", "User"]
+
+        # Get available categories - use enabled_categories or fallback to all
+        if level.enabled_categories:
+            categories = level.enabled_categories
+        else:
+            # Default pool of unique categories
+            all_categories = [
+                "Audio", "Graphics", "User", "Display", "Interface",
+                "Performance", "Network", "Security", "Privacy", "System",
+                "Hardware", "Device", "Input", "Output", "Control",
+                "Appearance", "Theme", "Color", "Data", "Storage",
+                "File", "Access", "Permission", "Cache", "Memory"
+            ]
+            categories = all_categories
+
+        # Ensure we have enough unique categories for all menus
+        if len(categories) < level.menu_count:
+            # If we need more categories, generate unique names
+            for i in range(len(categories), level.menu_count):
+                categories.append(f"Settings_{i+1}")
 
         # Create menus based on level specification
         for i in range(level.menu_count):
             menu_id = f"menu_{i}"
-            category = categories[i % len(categories)] if categories else "System"
+            # Use unique category for each menu (no cycling)
+            category = categories[i]
             settings_count = level.settings_per_menu[i] if i < len(level.settings_per_menu) else 5
 
             menu = MenuNode(
