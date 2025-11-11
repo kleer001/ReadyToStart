@@ -66,6 +66,13 @@ class GenerationPipeline:
                 continue
 
     def _generate_once(self) -> GameState:
+        # Check if current level has explicit menu structure (simple generation)
+        current_level = self.level_manager.get_current_level()
+        if current_level and current_level.menu_count > 0:
+            # Use simple direct generation for levels with explicit menu counts
+            return self._generate_simple(current_level)
+
+        # Use procedural WFC generation for complex levels
         graph = self._generate_topology()
         game_state = self._create_game_state()
         critical_path = self._get_critical_path_from_graph(graph)
@@ -75,6 +82,106 @@ class GenerationPipeline:
         self._set_starting_menu(graph, game_state)
 
         return game_state
+
+    def _generate_simple(self, level) -> GameState:
+        """Generate a simple game state with explicit menu structure.
+
+        Used for introductory levels with fixed menu counts and settings.
+
+        Args:
+            level: Level configuration with menu_count and settings_per_menu
+
+        Returns:
+            GameState with simple menu structure
+        """
+        game_state = self._create_game_state()
+        categories = level.enabled_categories if level.enabled_categories else ["Audio", "Graphics", "User"]
+
+        # Create menus based on level specification
+        for i in range(level.menu_count):
+            menu_id = f"menu_{i}"
+            category = categories[i % len(categories)] if categories else "System"
+            settings_count = level.settings_per_menu[i] if i < len(level.settings_per_menu) else 5
+
+            menu = MenuNode(
+                id=menu_id,
+                category=category,
+                level_id=self.current_level_id,
+            )
+
+            # Generate EXACT number of settings specified
+            settings = []
+            while len(settings) < settings_count:
+                # Generate a batch of settings
+                batch = self.compiler.compile_settings(
+                    f"{menu_id}_batch_{len(settings)}",
+                    category,
+                    is_critical=True
+                )
+                settings.extend(batch)
+
+            # Trim to exact count
+            settings = settings[:settings_count]
+
+            # Renumber setting IDs to be sequential
+            for idx, setting in enumerate(settings):
+                setting.id = f"{menu_id}_setting_{idx}"
+                setting.level_id = self.current_level_id
+                menu.add_setting(setting)
+
+            game_state.add_menu(menu)
+
+        # Add simple dependencies based on dependency network
+        if level.dependency_network and len(game_state.menus) > 0:
+            self._add_simple_dependencies(game_state, level)
+
+        # Set first menu as starting point
+        game_state.current_menu = list(game_state.menus.keys())[0]
+
+        return game_state
+
+    def _add_simple_dependencies(self, game_state: GameState, level):
+        """Add simple dependencies for explicit level structures.
+
+        Args:
+            game_state: Game state to add dependencies to
+            level: Level configuration with dependency network
+        """
+        # For simple levels, just make some settings depend on others in a chain
+        all_menus = list(game_state.menus.values())
+
+        if len(all_menus) == 1:
+            # Single menu: create simple chain of dependencies within the menu
+            settings = all_menus[0].settings
+            if len(settings) >= 2:
+                from src.core.dependencies import SimpleDependency
+                from src.core.enums import SettingState
+
+                # First setting has no dependencies (already enabled)
+                # Each subsequent setting depends on the previous one
+                for i in range(1, len(settings)):
+                    dep = SimpleDependency(
+                        setting_id=settings[i-1].id,
+                        required_state=SettingState.ENABLED
+                    )
+                    game_state.resolver.add_dependency(settings[i].id, dep)
+        else:
+            # Multiple menus: menus depend on each other
+            from src.core.dependencies import SimpleDependency
+            from src.core.enums import SettingState
+
+            for i in range(1, len(all_menus)):
+                # Settings in menu i depend on some settings in menu i-1
+                prev_menu_settings = all_menus[i-1].settings
+                curr_menu_settings = all_menus[i].settings
+
+                if prev_menu_settings and curr_menu_settings:
+                    # Make first setting of current menu depend on first setting of previous menu
+                    dep = SimpleDependency(
+                        setting_id=prev_menu_settings[0].id,
+                        required_state=SettingState.ENABLED
+                    )
+                    game_state.resolver.add_dependency(curr_menu_settings[0].id, dep)
 
     def _generate_topology(self):
         wfc = WFCGenerator(self.wfc_rules, self.config)

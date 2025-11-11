@@ -68,16 +68,124 @@ class LevelManager:
         self.level_order: list[str] = []
 
     def load_levels(self) -> None:
-        """Load all levels from levels.ini configuration file.
+        """Load all levels from configuration files.
+
+        Tries meta_levels.ini first (single source of truth), falls back to levels.ini.
 
         Raises:
-            FileNotFoundError: If levels.ini doesn't exist
+            FileNotFoundError: If no level configuration exists
             ValueError: If level configuration is invalid
         """
+        meta_file = self.config_dir / "meta_levels.ini"
         levels_file = self.config_dir / "levels.ini"
-        if not levels_file.exists():
-            raise FileNotFoundError(f"Levels configuration not found: {levels_file}")
 
+        # Try meta_levels.ini first (preferred)
+        if meta_file.exists():
+            self._load_from_meta(meta_file)
+        elif levels_file.exists():
+            # Fall back to levels.ini
+            self._load_from_levels_ini(levels_file)
+        else:
+            raise FileNotFoundError(f"No level configuration found in {self.config_dir}")
+
+    def _load_from_meta(self, meta_file: Path) -> None:
+        """Load levels from meta_levels.ini.
+
+        Args:
+            meta_file: Path to meta_levels.ini
+        """
+        parser = configparser.ConfigParser()
+        parser.read(meta_file)
+
+        if "Meta" not in parser:
+            raise ValueError("meta_levels.ini must have a [Meta] section")
+
+        meta_section = parser["Meta"]
+        max_items = int(meta_section.get("max_items_per_page", "15"))
+
+        # Parse level pattern
+        levels_str = meta_section.get("levels", "")
+        level_specs = [line.strip() for line in levels_str.strip().split("\n") if line.strip()]
+
+        # Always add Level_0 (hub)
+        hub_level = Level(
+            id="Level_0",
+            name="Main Menu Hub",
+            description="Central hub - always accessible. Keep trying to Play!",
+            menu_count=0,  # Hub has no gameplay
+            settings_per_menu=[],
+            max_items_per_page=max_items
+        )
+        self.levels["Level_0"] = hub_level
+        self.level_order.append("Level_0")
+
+        # Generate levels from pattern
+        for idx, spec in enumerate(level_specs, start=1):
+            level = self._parse_meta_spec(idx, spec, max_items)
+            level_id = f"Level_{idx}"
+            self.levels[level_id] = level
+            self.level_order.append(level_id)
+
+    def _parse_meta_spec(self, level_num: int, spec: str, max_items: int) -> Level:
+        """Parse a level specification from meta format.
+
+        Format: "menus:settings|settings|..."
+        Example: "1:5" = 1 menu with 5 settings
+        Example: "2:5|10" = 2 menus with 5 and 10 settings
+
+        Args:
+            level_num: Level number (1-indexed)
+            spec: Level specification string
+            max_items: Maximum items per page
+
+        Returns:
+            Level object
+        """
+        parts = spec.split(":")
+        if len(parts) != 2:
+            raise ValueError(f"Invalid level spec: {spec}. Expected format 'menus:settings'")
+
+        menu_count = int(parts[0])
+        settings_parts = parts[1].split("|")
+        settings_per_menu = [int(s) for s in settings_parts]
+
+        # Calculate difficulty parameters based on level number
+        min_path = min(level_num, 5)
+        max_depth = min(level_num + 1, 7)
+        gate_dist = min(0.1 + (level_num - 1) * 0.05, 0.5)
+        critical_ratio = min(0.3 + (level_num - 1) * 0.03, 0.6)
+
+        # Generate level name
+        total_settings = sum(settings_per_menu)
+        if menu_count == 1:
+            name = f"Options - Level {level_num} ({total_settings} settings)"
+        else:
+            name = f"Options - Level {level_num} ({menu_count} menus)"
+
+        return Level(
+            id=f"Level_{level_num}",
+            name=name,
+            description=f"Level {level_num}: {menu_count} menu(s), {total_settings} settings total",
+            menu_count=menu_count,
+            settings_per_menu=settings_per_menu,
+            max_items_per_page=max_items,
+            min_path_length=min_path,
+            max_depth=max_depth,
+            required_categories=min(menu_count, 5),
+            gate_distribution=gate_dist,
+            critical_ratio=critical_ratio,
+            decoy_ratio=0.35,
+            noise_ratio=0.30,
+            enabled_categories=[],  # Will use default categories
+            dependency_network={}
+        )
+
+    def _load_from_levels_ini(self, levels_file: Path) -> None:
+        """Load levels from legacy levels.ini format.
+
+        Args:
+            levels_file: Path to levels.ini
+        """
         parser = configparser.ConfigParser()
         parser.read(levels_file)
 
