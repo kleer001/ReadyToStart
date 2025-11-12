@@ -20,6 +20,7 @@ class Setting:
         max_value: Maximum value for numeric types
         visit_count: Number of times setting has been modified
         last_modified: Timestamp of last modification
+        level_id: Level identifier this setting belongs to (optional)
     """
 
     id: str
@@ -31,6 +32,7 @@ class Setting:
     max_value: float | None = None
     visit_count: int = 0
     last_modified: float | None = None
+    level_id: str | None = None
 
     def __post_init__(self):
         """Validate setting attributes."""

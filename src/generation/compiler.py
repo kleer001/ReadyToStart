@@ -25,9 +25,10 @@ NORMAL_TYPE_WEIGHTS = {
 
 
 class SettingCompiler:
-    def __init__(self, config: GenerationConfig, madlibs: MadLibsEngine):
+    def __init__(self, config: GenerationConfig, madlibs: MadLibsEngine, max_items_per_page: int = 15):
         self.config = config
         self.madlibs = madlibs
+        self.max_items_per_page = max_items_per_page
         self.categories_config = self._load_category_config()
 
     def compile_settings(
@@ -35,6 +36,9 @@ class SettingCompiler:
     ) -> list[Setting]:
         cat_config = self.categories_config.get(category, {})
         count = cat_config.get("setting_count", 8)
+
+        # Enforce maximum items per page limit
+        count = min(count, self.max_items_per_page)
 
         return [
             self._create_setting(node_id, category, i, is_critical)
