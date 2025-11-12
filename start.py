@@ -38,48 +38,41 @@ def create_game(difficulty: DifficultyTier = DifficultyTier.MEDIUM, seed: int | 
 def find_final_setting(game_state: GameState) -> str:
     """Find the final setting in the dependency chain.
 
-    This finds a setting that would be one of the last to be enabled,
-    typically one with the most dependencies or deepest in the chain.
-
     Args:
         game_state: The game state with all settings and dependencies
 
     Returns:
         The label of a final setting in the dependency chain
     """
-    # Build dependency graph
-    dep_graph = nx.DiGraph()
+    dependencies = game_state.resolver.dependencies
 
-    for setting_id, deps in game_state.resolver.dependencies.items():
-        for dep in deps:
-            if hasattr(dep, 'setting_id'):
-                # Edge from dependency to dependent (dep.setting_id -> setting_id)
-                dep_graph.add_edge(dep.setting_id, setting_id)
+    if not dependencies:
+        all_settings = [s for menu in game_state.menus.values() for s in menu.settings]
+        return all_settings[-1].label if all_settings else "the final setting"
 
-    # Find settings with no outgoing edges (sink nodes - nothing depends on them)
-    sink_nodes = [node for node in dep_graph.nodes() if dep_graph.out_degree(node) == 0]
+    all_setting_ids = {s.id for menu in game_state.menus.values() for s in menu.settings}
+    dependency_targets = {dep.setting_id for deps in dependencies.values() for dep in deps if hasattr(dep, 'setting_id')}
 
-    if not sink_nodes:
-        # No sink nodes found, find the setting with the most dependencies
-        max_deps = 0
-        final_setting_id = None
-        for setting_id, deps in game_state.resolver.dependencies.items():
-            if len(deps) > max_deps:
-                max_deps = len(deps)
-                final_setting_id = setting_id
+    sink_nodes = all_setting_ids - dependency_targets
 
-        if final_setting_id:
-            setting = game_state.get_setting(final_setting_id)
-            return setting.label if setting else "the final setting"
-    else:
-        # Return one of the sink nodes (prefer one with dependencies)
-        for node in sink_nodes:
-            if node in game_state.resolver.dependencies:
-                setting = game_state.get_setting(node)
+    if sink_nodes:
+        for setting_id in sink_nodes:
+            if setting_id in dependencies:
+                setting = game_state.get_setting(setting_id)
                 return setting.label if setting else "the final setting"
 
-        # If no sink node has dependencies, just return the first one
-        setting = game_state.get_setting(sink_nodes[0])
+        setting = game_state.get_setting(next(iter(sink_nodes)))
+        return setting.label if setting else "the final setting"
+
+    max_deps = 0
+    final_setting_id = None
+    for setting_id, deps in dependencies.items():
+        if len(deps) > max_deps:
+            max_deps = len(deps)
+            final_setting_id = setting_id
+
+    if final_setting_id:
+        setting = game_state.get_setting(final_setting_id)
         return setting.label if setting else "the final setting"
 
     return "the final setting"
@@ -172,48 +165,43 @@ def show_main_menu(stdscr):
             sys.exit(0)
 
 
-def show_play_error(stdscr, level_name: str, level_number: int):
+def show_play_error(stdscr, game_state: GameState):
     """Show the error message when trying to play without completing required levels.
 
     Args:
         stdscr: The curses screen
-        level_name: The name of the level that needs completion
-        level_number: The level number (1, 2, 3, etc.)
+        game_state: The game state for the current level
     """
     stdscr.clear()
     height, width = stdscr.getmaxyx()
 
-    # Box dimensions
     box_width = 80
     box_height = 14
     start_x = (width - box_width) // 2
     start_y = (height - box_height) // 2
 
-    # Double-line box characters
     top_left, top_right = "╔", "╗"
     bottom_left, bottom_right = "╚", "╝"
     horizontal, vertical = "═", "║"
     divider_left, divider_right = "╠", "╣"
 
+    final_setting = find_final_setting(game_state)
+
     try:
-        # Top border
         stdscr.addstr(start_y, start_x, top_left + horizontal * (box_width - 2) + top_right)
 
-        # Title
         title = "ERROR: Cannot start game"
         stdscr.addstr(start_y + 1, start_x, vertical + title.center(box_width - 2) + vertical)
 
-        # Divider
         stdscr.addstr(start_y + 2, start_x, divider_left + horizontal * (box_width - 2) + divider_right)
 
-        # Message content
         messages = [
             "",
-            f"You must complete '{level_name}' first!",
+            f"Game requires '{final_setting}' setting",
+            "to be configured.",
             "",
-            f"Click Options to configure {level_name}.",
+            "Click Options to configure settings.",
             "",
-            f"(Complete all levels to start the game)",
             "",
             "Press any key to return to menu..."
         ]
@@ -222,18 +210,16 @@ def show_play_error(stdscr, level_name: str, level_number: int):
             line = msg.center(box_width - 2)
             stdscr.addstr(start_y + 3 + i, start_x, vertical + line + vertical)
 
-        # Fill remaining lines
         for i in range(len(messages), box_height - 4):
             stdscr.addstr(start_y + 3 + i, start_x, vertical + " " * (box_width - 2) + vertical)
 
-        # Bottom border
         stdscr.addstr(start_y + box_height - 1, start_x, bottom_left + horizontal * (box_width - 2) + bottom_right)
 
     except curses.error:
         pass
 
     stdscr.refresh()
-    stdscr.getch()  # Wait for keypress
+    stdscr.getch()
 
 
 def show_victory_screen(stdscr):
@@ -317,37 +303,26 @@ def hub_menu_loop(stdscr, progression: LevelProgressionTracker, level_manager: L
         choice = show_main_menu(stdscr)
 
         if choice == "play":
-            # Check if all levels are complete
             if progression.can_start_game(level_order):
-                # Victory! All levels complete
                 show_victory_screen(stdscr)
                 return "play"
             else:
-                # Find which level needs to be completed
                 next_level_id = progression.get_next_incomplete_level(level_order)
                 if next_level_id:
-                    level = level_manager.get_level(next_level_id)
-                    level_number = progression.get_current_level_number(level_order)
-                    show_play_error(stdscr, level.name, level_number)
+                    game_state = progression.level_game_states[next_level_id]
+                    show_play_error(stdscr, game_state)
 
         elif choice == "options":
-            # Route to the appropriate level
             next_level_id = progression.get_next_incomplete_level(level_order)
             if not next_level_id:
-                # All levels complete, shouldn't get here
                 return "play"
 
-            # Play the level
             game_state = progression.level_game_states[next_level_id]
             ui_loop = UILoop(game_state, config_dir)
 
-            # Start at the first menu
             start_menu = game_state.current_menu or list(game_state.menus.keys())[0]
             ui_loop.start(start_menu)
 
-            # After completing the UI loop, check if level is complete
-            # (This happens automatically in progression.is_level_complete)
-            # Return to hub menu
             continue
 
 
@@ -394,24 +369,16 @@ def main():
 
         print("Ready to start!\n")
 
-        def level_loop(stdscr):
-            level_order = level_manager.level_order
+        result = curses.wrapper(
+            hub_menu_loop,
+            progression,
+            level_manager,
+            str(config_dir)
+        )
 
-            while True:
-                next_level_id = progression.get_next_incomplete_level(level_order)
-
-                if not next_level_id:
-                    show_victory_screen(stdscr)
-                    return
-
-                game_state = progression.level_game_states[next_level_id]
-                ui_loop = UILoop(game_state, str(config_dir))
-                start_menu = game_state.current_menu or list(game_state.menus.keys())[0]
-                ui_loop.start(start_menu)
-
-        curses.wrapper(level_loop)
-        print("\n\nCongratulations! You've mastered the art of settings configuration!")
-        print("Thanks for playing!")
+        if result == "play":
+            print("\n\nCongratulations! You've mastered the art of settings configuration!")
+            print("Thanks for playing!")
 
     except KeyboardInterrupt:
         print("\n\nGame interrupted. Your settings remain unsaved. Forever.")
