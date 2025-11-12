@@ -10,8 +10,6 @@ import curses
 import sys
 from pathlib import Path
 
-import networkx as nx
-
 from src.core.config_loader import DifficultyTier
 from src.core.game_state import GameState
 from src.core.level_manager import LevelManager
@@ -384,32 +382,36 @@ def main():
     try:
         config_dir = Path(__file__).parent / "config"
 
-        # Load level manager
         level_manager = LevelManager(str(config_dir))
         level_manager.load_levels()
 
-        # Generate all levels
         print("Initializing levels...")
         level_game_states = generate_all_levels(config_dir, level_manager)
 
-        # Create progression tracker
         progression = LevelProgressionTracker()
         for level_id, game_state in level_game_states.items():
             progression.register_level(level_id, game_state)
 
         print("Ready to start!\n")
 
-        # Start hub menu loop
-        result = curses.wrapper(
-            hub_menu_loop,
-            progression,
-            level_manager,
-            str(config_dir)
-        )
+        def level_loop(stdscr):
+            level_order = level_manager.level_order
 
-        if result == "play":
-            print("\n\nCongratulations! You've mastered the art of settings configuration!")
-            print("Thanks for playing!")
+            while True:
+                next_level_id = progression.get_next_incomplete_level(level_order)
+
+                if not next_level_id:
+                    show_victory_screen(stdscr)
+                    return
+
+                game_state = progression.level_game_states[next_level_id]
+                ui_loop = UILoop(game_state, str(config_dir))
+                start_menu = game_state.current_menu or list(game_state.menus.keys())[0]
+                ui_loop.start(start_menu)
+
+        curses.wrapper(level_loop)
+        print("\n\nCongratulations! You've mastered the art of settings configuration!")
+        print("Thanks for playing!")
 
     except KeyboardInterrupt:
         print("\n\nGame interrupted. Your settings remain unsaved. Forever.")

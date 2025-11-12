@@ -161,7 +161,7 @@ class LevelManager:
             decoy_ratio=0.35,
             noise_ratio=0.30,
             enabled_categories=[],
-            dependency_network={}
+            dependency_network={"enabled": True}
         )
 
     def _load_explicit(self, meta_section: configparser.SectionProxy) -> None:
@@ -221,7 +221,7 @@ class LevelManager:
             decoy_ratio=0.35,
             noise_ratio=0.30,
             enabled_categories=[],
-            dependency_network={}
+            dependency_network={"enabled": True}
         )
 
 
