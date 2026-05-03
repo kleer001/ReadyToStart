@@ -157,36 +157,35 @@ class GenerationPipeline:
 
             game_state.add_menu(menu)
 
-        if level.dependency_network and len(game_state.menus) > 0:
+        menu_ids = list(game_state.menus.keys())
+        for idx in range(len(menu_ids) - 1):
+            game_state.menus[menu_ids[idx]].connections = [menu_ids[idx + 1]]
+
+        if game_state.menus:
             self._add_simple_dependencies(game_state, level)
 
-        game_state.current_menu = list(game_state.menus.keys())[0]
+        game_state.current_menu = menu_ids[0]
 
         return game_state
 
     def _add_simple_dependencies(self, game_state: GameState, level):
-        all_menus = list(game_state.menus.values())
+        """Wire each menu's settings into a randomized chain.
 
-        if len(all_menus) == 1:
-            settings = all_menus[0].settings
-            if len(settings) >= 2:
-                for i in range(1, len(settings)):
-                    dep = SimpleDependency(
-                        setting_id=settings[i-1].id,
-                        required_state=SettingState.ENABLED
-                    )
-                    game_state.resolver.add_dependency(settings[i].id, dep)
-        else:
-            for i in range(1, len(all_menus)):
-                prev_menu_settings = all_menus[i-1].settings
-                curr_menu_settings = all_menus[i].settings
-
-                if prev_menu_settings and curr_menu_settings:
-                    dep = SimpleDependency(
-                        setting_id=prev_menu_settings[0].id,
-                        required_state=SettingState.ENABLED
-                    )
-                    game_state.resolver.add_dependency(curr_menu_settings[0].id, dep)
+        Why: the puzzle is to find the one setting whose dependencies are
+        already met (the chain root) and unravel from there. Shuffling the
+        chain order means the root isn't always the first item on screen.
+        """
+        for menu in game_state.menus.values():
+            if len(menu.settings) < 2:
+                continue
+            order = list(menu.settings)
+            random.shuffle(order)
+            for i in range(1, len(order)):
+                dep = SimpleDependency(
+                    setting_id=order[i - 1].id,
+                    required_state=SettingState.ENABLED,
+                )
+                game_state.resolver.add_dependency(order[i].id, dep)
 
     def _generate_topology(self):
         wfc = WFCGenerator(self.wfc_rules, self.config)
