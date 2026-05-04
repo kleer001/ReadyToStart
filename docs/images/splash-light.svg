@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 360"
+     font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, 'Courier New', monospace"
+     font-size="16"
+     role="img"
+     aria-label="Ready to Start title screen: an ASCII-art double-line box containing the text 'READY TO START' with menu items 'Play' (selected) and 'Options'.">
+  <title>Ready to Start — title screen</title>
+
+  <!-- terminal background -->
+  <rect width="880" height="360" rx="8" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+
+  <!-- terminal title bar -->
+  <rect x="0" y="0" width="880" height="28" rx="8" fill="#f6f8fa"/>
+  <rect x="0" y="20" width="880" height="8" fill="#f6f8fa"/>
+  <line x1="0" y1="28" x2="880" y2="28" stroke="#d0d7de" stroke-width="1"/>
+  <circle cx="18" cy="14" r="6" fill="#ff5f57"/>
+  <circle cx="38" cy="14" r="6" fill="#febc2e"/>
+  <circle cx="58" cy="14" r="6" fill="#28c840"/>
+  <text x="440" y="19" fill="#57606a" font-size="12" text-anchor="middle">ready-to-start</text>
+
+  <!-- shell prompt -->
+  <text x="56" y="58" fill="#1a7f37" font-size="13">$ python start.py</text>
+
+  <!-- title screen box (preserve internal whitespace) -->
+  <g xml:space="preserve" fill="#1f2328">
+    <text x="56" y="92">╔══════════════════════════════════════════════════════════════════════════════╗</text>
+    <text x="56" y="114">║                                READY TO START                                ║</text>
+    <text x="56" y="136">╠══════════════════════════════════════════════════════════════════════════════╣</text>
+    <text x="56" y="158">║                                                                              ║</text>
+
+    <!-- Play (selected: cyan + bold) -->
+    <text x="56" y="180"><tspan>║                                   </tspan><tspan fill="#0969da" font-weight="bold">&gt; Play &lt;</tspan><tspan>                                   ║</tspan></text>
+
+    <!-- Options (not selected) -->
+    <text x="56" y="202">║                                   Options                                    ║</text>
+
+    <text x="56" y="224">║                                                                              ║</text>
+    <text x="56" y="246">║                                                                              ║</text>
+    <text x="56" y="268">║                                                                              ║</text>
+    <text x="56" y="290">╚══════════════════════════════════════════════════════════════════════════════╝</text>
+  </g>
+
+  <!-- subtle hint line -->
+  <text x="440" y="328" fill="#8c959f" font-size="12" text-anchor="middle">↑↓ to move · Enter to select · q to quit</text>
+</svg>

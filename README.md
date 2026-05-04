@@ -1,7 +1,10 @@
 # Ready to Start
 
 <p align="center">
-  <img src="docs/images/splash.svg" alt="Ready to Start title screen" width="720">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/splash-dark.svg">
+    <img src="docs/images/splash-light.svg" alt="Ready to Start title screen" width="720">
+  </picture>
 </p>
 
 A terminal puzzle game about settings menus. There's a "Play" button.
