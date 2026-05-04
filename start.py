@@ -345,7 +345,9 @@ def hub_menu_loop(stdscr, progression: LevelProgressionTracker, level_manager: L
 
             # Start at the first menu
             start_menu = game_state.current_menu or list(game_state.menus.keys())[0]
-            ui_loop.start(start_menu)
+            # Pass the existing stdscr so UILoop doesn't nest curses.wrapper
+            # (nesting tears down terminal state on inner exit).
+            ui_loop.start(start_menu, stdscr=stdscr)
 
             # After completing the UI loop, check if level is complete
             # (This happens automatically in progression.is_level_complete)

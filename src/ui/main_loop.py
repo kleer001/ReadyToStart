@@ -70,7 +70,7 @@ class UILoop:
 
         self.stdscr = None
 
-    def start(self, start_menu_id: str):
+    def start(self, start_menu_id: str, stdscr=None):
         success, error = self.navigation.navigate_to(start_menu_id)
         if not success:
             print(f"Failed to start: {error}")
@@ -82,7 +82,13 @@ class UILoop:
 
         self.running = True
         try:
-            curses.wrapper(self._curses_main)
+            if stdscr is not None:
+                # Reuse caller's curses context — nesting curses.wrapper
+                # calls endwin() on inner exit and corrupts the outer
+                # terminal state (arrow keys then misbehave).
+                self._curses_main(stdscr)
+            else:
+                curses.wrapper(self._curses_main)
         finally:
             # Complete session tracking if enabled
             if self.session_tracker:
@@ -728,11 +734,6 @@ Game Status:
             return  # Only handle once
         self._victory_handled = True
 
-        self.message_display.add_message(
-            "VICTORY! All settings enabled!",
-            MessageType.SUCCESS
-        )
-
         # Save session if tracking
         if self.session_tracker:
             from pathlib import Path
@@ -740,10 +741,16 @@ Game Status:
             sessions_dir.mkdir(exist_ok=True)
             filepath = sessions_dir / f"session_{self.session_tracker.metrics.session_id}.json"
             self.session_tracker.save(str(filepath))
-            self.message_display.add_message(
-                f"Session saved to {filepath}",
-                MessageType.SUCCESS
-            )
+
+        # Render once so the player sees the final state, then show a
+        # blocking modal and exit the loop so control returns to the hub.
+        self._render()
+        self._show_modal(
+            "\n  LEVEL COMPLETE!\n\n"
+            "  All settings configured.\n\n"
+            "  Press Enter to return to the main menu..."
+        )
+        self.stop()
 
     def _handle_show_session_stats(self):
         """Show detailed session statistics."""
