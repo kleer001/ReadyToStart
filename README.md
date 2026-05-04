@@ -1,5 +1,9 @@
 # Ready to Start
 
+<p align="center">
+  <img src="docs/images/splash.svg" alt="Ready to Start title screen" width="720">
+</p>
+
 A terminal puzzle game about settings menus. There's a "Play" button.
 It's locked. To unlock it, you have to configure the settings. To
 configure a setting, you have to configure the *other* setting it
